@@ -1,0 +1,105 @@
+[project]
+name = "rebelist-revelations"
+version = "0.1.0"
+description = "This project creates a RAG application that scans Confluence for instant answers from your internal documentation."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic>=2.11.5",
+    "pydantic-settings>=2.9.1",
+    "python-dotenv>=1.1.0",
+    "rich-click>=1.8.9",
+]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.8.2",
+    "hatchling>=1.27.0",
+    "pre-commit>=4.2.0",
+    "pyright>=1.1.401",
+    "pytest>=8.3.5",
+    "pytest-mock>=3.14.1",
+    "ruff>=0.11.12",
+]
+
+[project.scripts]
+revelations = "rebelist.revelations.main:console"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rebelist"]
+
+
+### pyright ###
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+include = ["src", "tests"]
+typeCheckingMode = "strict"
+#reportMissingTypeStubs = false
+#reportUnknownMemberType = false
+reportUnknownLambdaType = false
+exclude = [
+    "**/__pycache__"
+]
+
+### ruff ###
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "single"
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+    "A", # Aesthetic rules (e.g., blank lines, comment formatting)
+    "E", # Errors (e.g., syntax errors, indentation issues)
+    "W", # Warnings (e.g., line length, trailing whitespace)
+    "F", # Pyflakes (e.g., unused imports, undefined variables)
+    "I", # Import rules (e.g., import order, unused imports)
+    "B", # Bugbear (e.g., potential bugs, mutable default arguments)
+    "C4", # McCabe complexity (e.g., function complexity)
+    "N", # Naming conventions (e.g., PEP8 naming standards)
+    "D", # Docstrings (e.g., missing docstrings, formatting issues)
+    "RUF100", # Mistakes (e.g., common mistakes or poor patterns)
+]
+ignore = [
+    "ANN", # Disable all type annotation-related checks
+    "PYI", # Disable checks for .pyi stub files
+    "PLR", # Disable Pylint rules related to typing
+    "D107", # Disable documentation on __init__ methods
+    "D100", # Disable missing docstring in public module
+    "D104", # Disable missing docstring in public package
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+### pytest ###
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+### coverage ###
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+omit = [
+    "*/site-packages/*",
+    "*/dependency_injector/*",
+    "**/__init__.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.coverage.html]
+directory = "coverage"
