@@ -1,5 +1,5 @@
 from rebelist.revelations.domain import ContextWriterPort
-from rebelist.revelations.infrastructure.mongo.repositories import MongoDocumentRepository
+from rebelist.revelations.infrastructure.mongo import MongoDocumentRepository
 
 
 class DataVectorizeUseCase:

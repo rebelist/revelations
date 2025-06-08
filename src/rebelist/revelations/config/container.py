@@ -13,13 +13,12 @@ from pymongo import MongoClient
 from pymongo.synchronous.database import Database
 from qdrant_client import QdrantClient
 
-from rebelist.revelations.application.use_cases import DataFetchUseCase, DataVectorizeUseCase
-from rebelist.revelations.application.use_cases.semantic_search import SemanticSearchUseCase
+from rebelist.revelations.application.use_cases import DataFetchUseCase, DataVectorizeUseCase, SemanticSearchUseCase
 from rebelist.revelations.config.settings import load_settings
-from rebelist.revelations.infrastructure.confluence.adapters import ConfluenceGateway
-from rebelist.revelations.infrastructure.mongo.repositories import MongoDocumentRepository
-from rebelist.revelations.infrastructure.ollama.adapters import OllamaAdapter
-from rebelist.revelations.infrastructure.qdrant.adapters import QdrantContextReader, QdrantContextWriter
+from rebelist.revelations.infrastructure.confluence import ConfluenceGateway
+from rebelist.revelations.infrastructure.mongo import MongoDocumentRepository
+from rebelist.revelations.infrastructure.ollama import OllamaAdapter
+from rebelist.revelations.infrastructure.qdrant import QdrantContextReader, QdrantContextWriter
 
 
 class Container(DeclarativeContainer):

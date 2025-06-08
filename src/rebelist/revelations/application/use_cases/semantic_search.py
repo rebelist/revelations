@@ -1,5 +1,4 @@
-from rebelist.revelations.domain import ContextReaderPort, Response
-from rebelist.revelations.domain.services import ResponseGeneratorPort
+from rebelist.revelations.domain import ContextReaderPort, Response, ResponseGeneratorPort
 
 
 class SemanticSearchUseCase:

@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from rebelist.revelations.domain import ContentProviderPort, Document, DocumentRepositoryPort
-from rebelist.revelations.infrastructure.utilities.html_reader import HTMLParser
+from rebelist.revelations.infrastructure.confluence import XHTMLParser
 
 
 class DataFetchUseCase:
@@ -21,7 +21,7 @@ class DataFetchUseCase:
             document = Document(
                 id=page['id'],
                 title=page['title'],
-                content=HTMLParser.text(page['content']),
+                content=XHTMLParser(page['content']).text(),
                 modified_at=datetime.now(),
                 raw=page['raw'],
             )

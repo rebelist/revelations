@@ -1,6 +1,11 @@
 from rebelist.revelations.domain.models import ContextDocument, Document, Response
 from rebelist.revelations.domain.repositories import DocumentRepositoryPort
-from rebelist.revelations.domain.services import ContentProviderPort, ContextReaderPort, ContextWriterPort
+from rebelist.revelations.domain.services import (
+    ContentProviderPort,
+    ContextReaderPort,
+    ContextWriterPort,
+    ResponseGeneratorPort,
+)
 
 __all__ = [
     'Document',
@@ -10,4 +15,5 @@ __all__ = [
     'ContentProviderPort',
     'ContextWriterPort',
     'ContextReaderPort',
+    'ResponseGeneratorPort',
 ]

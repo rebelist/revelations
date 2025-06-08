@@ -26,12 +26,10 @@ class ConfluenceGateway(ContentProviderPort):
         )
 
         for document in documents:
-            content = cast(Document, self.__client.convert_storage_to_view(document['body']['storage']['value']))
-
             page = {
                 'id': document['id'],
                 'title': document['title'],
-                'content': content['value'],
+                'content': document['body']['storage']['value'],
                 'raw': document,
                 'modified_at': datetime.now(),
             }
