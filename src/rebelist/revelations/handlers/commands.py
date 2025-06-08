@@ -6,6 +6,7 @@ from pymongo.synchronous.database import Database
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
 from rich.console import Console
+from rich.markdown import Markdown
 
 
 @click.command(name='store:initialize')
@@ -45,7 +46,7 @@ def data_initialize(context: Context, drop: bool) -> None:
 
 @click.command(name='data:fetch')
 @click.pass_context
-def data_collection(context: Context) -> None:
+def data_fetcher(context: Context) -> None:
     """Retrieves and stores documents into the port."""
     container = context.obj
     command = container.data_fetch_use_case()
@@ -61,7 +62,7 @@ def data_collection(context: Context) -> None:
 
 @click.command(name='data:vectorize')
 @click.pass_context
-def data_index(context: Context) -> None:
+def data_vectorizer(context: Context) -> None:
     """Index and structure documents for RAG context retrieval."""
     container = context.obj
     command = container.data_vectorize_use_case()
@@ -75,13 +76,14 @@ def data_index(context: Context) -> None:
 
 
 @click.command(name='semantic:search')
+@click.option('--evidence', is_flag=True, help='Shows evidence information from the documentation on every answer.')
 @click.pass_context
-def semantic_search(context: Context) -> None:
-    """Index and structure documents for RAG context retrieval."""
+def semantic_search(context: Context, evidence: bool) -> None:
+    """Interactive Q&A RAG to answer questions based on documentation."""
     container = context.obj
     command = container.semantic_search_use_case()
-    click.secho('Welcome to the Revelations! Type exit at any time to quit.', fg='white')
-
+    click.secho('Welcome to the Revelations! Type "exit" at any time to quit.', fg='white')
+    console = Console()
     while True:
         try:
             question = click.prompt(style('👤 You', bold=True, fg='green'))
@@ -91,10 +93,12 @@ def semantic_search(context: Context) -> None:
 
             response = command(question)
 
-            click.echo(style('🤖 Answer: ', bold=True, fg='yellow') + style(response.answer))
+            click.echo(style('🤖 Answer: ', bold=True, fg='yellow'), nl=False)
+            console.print(Markdown(response.answer))
 
-            for document in response.documents:
-                click.secho(f'\nTitle: {document.title}\n{document.content}', fg='white', italic=True)
+            if evidence:
+                for index, document in enumerate(response.documents):
+                    click.secho(f'{index}Title: {document.title}\n{document.content}', fg='white', italic=True)
 
         except KeyboardInterrupt:
             break

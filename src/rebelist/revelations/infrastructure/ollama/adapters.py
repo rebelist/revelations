@@ -16,10 +16,9 @@ class OllamaAdapter(ResponseGeneratorPort):
 
         prompt = (
             f"You are an expert Q&A system for the internal documentation of a system called 'evelin'.\n"
-            f'Your task is to provide accurate and concise answers based solely on the provided context from '
-            f'Confluence pages.\n'
-            f'If the answer is not found in the context, state that you cannot answer the question '
-            f'with the given information.\n'
+            f'Everything that you knows relates to a multi tenant ecommerce platform called evelin.\n'
+            f'Your task is to provide accurate and concise answers based solely on the provided context.\n'
+            f'If the answer is not found in the context, state that you cannot answer the question or ask to clarify.\n'
             f'Do not make up information.\n\n'
             f'Context:\n{context_str}\n\n'
             f'Question: {question}\n\n'

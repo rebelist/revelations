@@ -4,7 +4,7 @@ import rich_click as click
 from rich_click import Command, Context
 
 from rebelist.revelations.config.container import Container
-from rebelist.revelations.handlers.commands import data_collection, data_index, data_initialize, semantic_search
+from rebelist.revelations.handlers.commands import data_fetcher, data_initialize, data_vectorizer, semantic_search
 
 container = Container.create()
 settings = container.settings()
@@ -18,8 +18,8 @@ def console(context: Context) -> None:
     context.obj = container
 
 
-data_fetcher: Command = cast(Command, data_collection)
-data_vectorizer: Command = cast(Command, data_index)
+data_fetcher: Command = cast(Command, data_fetcher)
+data_vectorizer: Command = cast(Command, data_vectorizer)
 data_initialize: Command = cast(Command, data_initialize)
 semantic_search: Command = cast(Command, semantic_search)
 
