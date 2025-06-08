@@ -1,13 +1,25 @@
 [project]
 name = "rebelist-revelations"
 version = "0.1.0"
-description = "This project creates a RAG application that scans Confluence for instant answers from your internal documentation."
+description = "A RAG application that scans Confluence for instant answers from your internal documentation."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "atlassian-python-api>=4.0.4",
+    "beautifulsoup4>=4.13.4",
+    "dependency-injector>=4.47.1",
+    "langchain>=0.3.25",
+    "langchain-community>=0.3.24",
+    "langchain-core>=0.3.63",
+    "langchain-ollama>=0.3.3",
+    "langchain-qdrant>=0.2.0",
+    "langchain-text-splitters>=0.3.8",
+    "langchainhub>=0.1.21",
     "pydantic>=2.11.5",
     "pydantic-settings>=2.9.1",
+    "pymongo>=4.13.0",
     "python-dotenv>=1.1.0",
+    "qdrant-client>=1.14.2",
     "rich-click>=1.8.9",
 ]
 
@@ -40,8 +52,8 @@ venvPath = "."
 venv = ".venv"
 include = ["src", "tests"]
 typeCheckingMode = "strict"
-#reportMissingTypeStubs = false
-#reportUnknownMemberType = false
+reportMissingTypeStubs = false
+reportUnknownMemberType = false
 reportUnknownLambdaType = false
 exclude = [
     "**/__pycache__"
@@ -76,6 +88,7 @@ ignore = [
     "D107", # Disable documentation on __init__ methods
     "D100", # Disable missing docstring in public module
     "D104", # Disable missing docstring in public package
+    "D101", # Disable undocumented public class definitions.
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -102,4 +115,4 @@ show_missing = true
 skip_covered = true
 
 [tool.coverage.html]
-directory = "coverage"
+directory = "var/coverage"

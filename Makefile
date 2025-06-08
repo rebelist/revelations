@@ -1,4 +1,11 @@
-.PHONY: check tests coverage
+.PHONY: check tests coverage start
+
+start:
+	@echo "\nStarting Revelations..."
+	@if [ ! -f ".env" ]; then cp ".env.example" ".env"; fi
+	@docker-compose up -d
+	@docker-compose exec -t ollama sh -c 'ollama pull "$$RAG_LLM_MODEL"'
+	@docker-compose exec -t ollama sh -c 'ollama pull "$$RAG_EMBEDDING_MODEL"'
 
 check:
 	@echo "\nRunning pre-commit all or a specific hook..."
