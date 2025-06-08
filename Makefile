@@ -1,4 +1,4 @@
-.PHONY: check tests coverage start
+.PHONY: check tests coverage start shutdown
 
 start:
 	@echo "\nStarting Revelations..."
@@ -6,6 +6,10 @@ start:
 	@docker-compose up -d
 	@docker-compose exec -t ollama sh -c 'ollama pull "$$RAG_LLM_MODEL"'
 	@docker-compose exec -t ollama sh -c 'ollama pull "$$RAG_EMBEDDING_MODEL"'
+
+shutdown:
+	@echo "\nShutting down Revelations..."
+	@docker-compose down
 
 check:
 	@echo "\nRunning pre-commit all or a specific hook..."
