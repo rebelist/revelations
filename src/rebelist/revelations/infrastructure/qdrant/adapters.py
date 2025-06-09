@@ -65,7 +65,7 @@ class QdrantContextReader(ContextReaderPort):
 
         documents = self.rerank(query, documents)
 
-        return documents[:5]
+        return documents[:10]
 
     def rerank(self, query: str, documents: Iterable[ContextDocument]) -> list[ContextDocument]:
         """Re-ranks documents by relevance to the query using a cross-encoder model."""

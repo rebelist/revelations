@@ -75,7 +75,7 @@ def data_vectorizer(context: Context) -> None:
     click.secho('Bye!', fg='white')
 
 
-@click.command(name='semantic:search')
+@click.command(name='chat:run')
 @click.option('--evidence', is_flag=True, help='Shows evidence information from the documentation on every answer.')
 @click.pass_context
 def semantic_search(context: Context, evidence: bool) -> None:
@@ -83,18 +83,18 @@ def semantic_search(context: Context, evidence: bool) -> None:
     container = context.obj
     command = container.semantic_search_use_case()
     click.secho('Welcome to the Revelations! Type "exit" at any time to quit.', fg='white')
-    console = Console()
+    console = Console(highlight=False)
     while True:
         try:
-            question = click.prompt(style('👤 You', bold=True, fg='green'))
+            question = click.prompt(style('\n👤 You', bold=True, fg='green'))
 
             if question.strip().lower() == 'exit':
                 break
 
             response = command(question)
 
-            click.echo(style('🤖 Answer: ', bold=True, fg='yellow'), nl=False)
-            console.print(Markdown(response.answer))
+            click.echo(style('🤖 RAG: ', bold=True, fg='yellow'), nl=False)
+            console.print(Markdown(response.answer, justify='left'))
 
             if evidence:
                 for index, document in enumerate(response.documents):

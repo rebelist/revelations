@@ -30,3 +30,19 @@ class ResponseGeneratorPort(ABC):
     def respond(self, question: str, documents: Iterable[ContextDocument]) -> Response:
         """Generates an answer to the given query using the provided context documents."""
         ...
+
+    @staticmethod
+    def get_prompt(question: str, context: str) -> str:
+        """Get the RAG prompt."""
+        prompt = (
+            f"You are an expert Q&A system for the internal documentation of a platform called 'evelin'.\n"
+            f'Your task is to provide accurate answers based solely on the provided context.\n'
+            f'If the answer is not found in the context, state that you cannot answer the question or ask to clarify.\n'
+            f'Do not make up information.\n\n'
+            f'Do not start the answer with something like: based on the provided context, just answer.\n\n'
+            f'Context:\n{context}\n\n'
+            f'Question: {question}\n\n'
+            f'Provide the Answer in Markdown format:'
+        )
+
+        return prompt
