@@ -12,6 +12,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pymongo import MongoClient
 from pymongo.synchronous.database import Database
 from qdrant_client import QdrantClient
+from sentence_transformers import CrossEncoder
 
 from rebelist.revelations.application.use_cases import DataFetchUseCase, DataVectorizeUseCase, SemanticSearchUseCase
 from rebelist.revelations.config.settings import load_settings
@@ -53,8 +54,6 @@ class Container(DeclarativeContainer):
         OllamaEmbeddings,
         model=settings.provided.rag.embedding_model,
         base_url=settings.provided.ollama.uri,
-        # No need for model_kwargs={'device': 'cpu'} as Ollama handles device management
-        # encode_kwargs={'normalize_embeddings': True} - Ollama embeddings are typically normalized by default
     )
 
     __document_splitter = Singleton(
@@ -62,6 +61,8 @@ class Container(DeclarativeContainer):
         chunk_size=settings.provided.rag.embedding_chunk_size,
         chunk_overlap=settings.provided.rag.embedding_chunk_overlap,
     )
+
+    __ranker = Singleton(CrossEncoder, settings.provided.rag.ranker_model)
 
     ### Public Services ###
 
@@ -82,7 +83,7 @@ class Container(DeclarativeContainer):
     )
 
     context_reader = Singleton(
-        QdrantContextReader, qdrant_client, __embedding, settings.provided.qdrant.context_collection
+        QdrantContextReader, qdrant_client, __embedding, settings.provided.qdrant.context_collection, __ranker
     )
 
     confluence_gateway = Singleton(ConfluenceGateway, __confluence_client, settings.provided.confluence.space)

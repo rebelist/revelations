@@ -8,7 +8,7 @@ class SemanticSearchUseCase:
 
     def __call__(self, query: str) -> Response:
         """Executes the command."""
-        documents = self.__context_reader.search(query, 5)
+        documents = self.__context_reader.search(query, 15)
         response = self.__response_generator.respond(query, documents)
 
         return response

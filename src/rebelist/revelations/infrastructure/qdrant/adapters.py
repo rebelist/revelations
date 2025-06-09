@@ -6,6 +6,7 @@ from langchain_ollama import OllamaEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from qdrant_client import QdrantClient
+from sentence_transformers import CrossEncoder
 
 from rebelist.revelations.domain import ContextDocument, ContextReaderPort, ContextWriterPort, Document
 
@@ -41,8 +42,9 @@ class QdrantContextWriter(ContextWriterPort):
 class QdrantContextReader(ContextReaderPort):
     """Vector reader adapter."""
 
-    def __init__(self, client: QdrantClient, embedding: OllamaEmbeddings, collection: str):
+    def __init__(self, client: QdrantClient, embedding: OllamaEmbeddings, collection: str, ranker: CrossEncoder):
         self.__store = QdrantVectorStore(client=client, collection_name=collection, embedding=embedding)
+        self.__ranker = ranker
 
     def search(self, query: str, limit: int) -> Iterable[ContextDocument]:
         """Searches for context documents based on a query embedding."""
@@ -61,4 +63,14 @@ class QdrantContextReader(ContextReaderPort):
                 )
             )
 
-        return documents
+        documents = self.rerank(query, documents)
+
+        return documents[:5]
+
+    def rerank(self, query: str, documents: Iterable[ContextDocument]) -> list[ContextDocument]:
+        """Re-ranks documents by relevance to the query using a cross-encoder model."""
+        pairs = [(query, document.content) for document in documents]
+        scores = self.__ranker.predict(pairs)
+        ranked_documents = sorted(zip(scores, documents, strict=False), key=lambda x: x[0], reverse=True)
+
+        return [document for _, document in ranked_documents]

@@ -21,6 +21,7 @@ dependencies = [
     "python-dotenv>=1.1.0",
     "qdrant-client>=1.14.2",
     "rich-click>=1.8.9",
+    "sentence-transformers>=4.1.0",
 ]
 
 [dependency-groups]
