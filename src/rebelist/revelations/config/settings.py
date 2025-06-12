@@ -30,7 +30,8 @@ class RagSettings(BaseSettings):
     embedding_chunk_size: int = 400
     embedding_chunk_overlap: int = 70
     llm_model: str = ''
-    ranker_model: str = ''
+    ranker_model_path: str = ''
+    ranker_model_name: str = ''
 
 
 class ConfluenceSettings(BaseSettings):

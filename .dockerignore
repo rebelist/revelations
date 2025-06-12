@@ -1,0 +1,6 @@
+*
+!/src/
+!uv.lock
+!pyproject.toml
+!README.md
+!.env

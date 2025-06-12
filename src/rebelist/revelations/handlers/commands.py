@@ -2,6 +2,7 @@ from typing import Any, Mapping
 
 import rich_click as click
 from click import Context, style
+from huggingface_hub import snapshot_download  # type: ignore[reportUnknownVariableType]
 from pymongo.synchronous.database import Database
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
@@ -39,6 +40,9 @@ def data_initialize(context: Context, drop: bool) -> None:
     mongo_collection.create_index('id', unique=True)
 
     qdrant.close()
+
+    # Download Re-ranker
+    snapshot_download(repo_id=settings.rag.ranker_model_name, local_dir=settings.rag.ranker_model_path)
 
     click.secho('The application have been successfully initialized.', fg='white')
     click.secho('Bye!', fg='white')
@@ -82,7 +86,7 @@ def semantic_search(context: Context, evidence: bool) -> None:
     """Interactive Q&A RAG to answer questions based on documentation."""
     container = context.obj
     command = container.semantic_search_use_case()
-    click.secho('Welcome to the Revelations! Type "exit" at any time to quit.', fg='white')
+    click.secho('Welcome to Revelations! Ask questions about the documentation or type "exit" to quit.', fg='white')
     console = Console(highlight=False)
     while True:
         try:

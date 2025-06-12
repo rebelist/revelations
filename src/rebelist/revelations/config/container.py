@@ -62,7 +62,9 @@ class Container(DeclarativeContainer):
         chunk_overlap=settings.provided.rag.embedding_chunk_overlap,
     )
 
-    __ranker = Singleton(CrossEncoder, settings.provided.rag.ranker_model)
+    __ranker = Singleton(
+        CrossEncoder, model_name_or_path=settings.provided.rag.ranker_model_path, local_files_only=True
+    )
 
     ### Public Services ###
 
