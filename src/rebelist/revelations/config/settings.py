@@ -91,8 +91,6 @@ def load_settings() -> Settings:
 
     if path.is_file():
         load_dotenv(path)
-    else:
-        raise FileNotFoundError(f'The .env file was not found at: {path}')
 
     version = metadata.version(PACKAGE_NAME)
     description = metadata.metadata(PACKAGE_NAME).get('summary', '')

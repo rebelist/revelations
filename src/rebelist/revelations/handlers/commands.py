@@ -102,7 +102,9 @@ def semantic_search(context: Context, evidence: bool) -> None:
 
             if evidence:
                 for index, document in enumerate(response.documents):
-                    click.secho(f'{index}Title: {document.title}\n{document.content}', fg='white', italic=True)
+                    click.secho(
+                        f'{index}Title: {document.title.strip()}\n{document.content.strip()}', fg='white', italic=True
+                    )
 
         except KeyboardInterrupt:
             break
