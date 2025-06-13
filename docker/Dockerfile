@@ -7,6 +7,7 @@ ARG UV_VERSION
 
 LABEL mantainer="Fran <rebelist.software@icloud.com>"
 
+ENV UV_COMPILE_BYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV TERM=xterm-256color
 ENV HF_HUB_CACHE=/home/revelations/.cache
