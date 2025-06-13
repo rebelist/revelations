@@ -32,17 +32,17 @@ class ResponseGeneratorPort(ABC):
         ...
 
     @staticmethod
-    def get_prompt(question: str, context: str) -> str:
-        """Get the RAG prompt."""
+    def get_prompt() -> str:
+        """Get the RAG template."""
         prompt = (
-            f"You are an expert Q&A system for the internal documentation of a platform called 'evelin'.\n"
-            f'Your task is to provide accurate answers based solely on the provided context.\n'
-            f'If the answer is not found in the context, state that you cannot answer the question or ask to clarify.\n'
-            f'Do not make up information.\n\n'
-            f'Do not start the answer with something like: based on the provided context, just answer.\n\n'
-            f'Context:\n{context}\n\n'
-            f'Question: {question}\n\n'
-            f'Provide the Answer in Markdown format:'
+            "You are an expert Q&A system for the internal documentation of a platform called 'evelin'.\n"
+            'Your task is to provide accurate answers based solely on the provided context.\n'
+            'If the answer is not found in the context, state that you cannot answer the question or ask to clarify.\n'
+            'Do not make up information.\n\n'
+            'Do not start the answer with something like: based on the provided context, just answer.\n\n'
+            'Context:\n{context}\n\n'
+            'Question: {question}\n\n'
+            'Provide the Answer in Markdown format:'
         )
 
         return prompt
