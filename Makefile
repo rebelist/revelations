@@ -7,6 +7,7 @@ start:
 	@docker-compose up -d
 	@docker-compose exec -t ollama sh -c 'ollama pull "$$RAG_LLM_MODEL"'
 	@docker-compose exec -t ollama sh -c 'ollama pull "$$RAG_EMBEDDING_MODEL"'
+	@bin/console store:initialize
 
 shutdown:
 	@echo "\nShutting down Revelations..."

@@ -3,7 +3,7 @@ __pycache__/
 *.py[oc]
 build/
 dist/
-docker/chat/models
+docker/echo/models
 wheels/
 *.egg-info
 

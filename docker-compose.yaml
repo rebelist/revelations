@@ -1,16 +1,16 @@
 services:
-  chat:
+  echo:
     build:
       context: .
       dockerfile: ./docker/Dockerfile
-    container_name: rebelist-revelations-chat
+    container_name: rebelist-revelations-echo
     restart: no
     env_file:
       - .env
     networks:
       - revelations
     volumes:
-      - ./docker/chat/models:/home/revelations/models
+      - ./docker/echo/models:/home/revelations/models
 
 
   mongo:
