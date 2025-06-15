@@ -1,8 +1,11 @@
-.PHONY: check tests coverage start shutdown
+.PHONY: check tests coverage start shutdown init
+
+init:
+	@echo "\nRevelations has been initialized."
+	@if [ ! -f ".env" ]; then cp ".env.example" ".env"; fi
 
 start:
 	@echo "\nStarting Revelations..."
-	@if [ ! -f ".env" ]; then cp ".env.example" ".env"; fi
 	@docker-compose build
 	@docker-compose up -d
 	@docker-compose exec -t ollama sh -c 'ollama pull "$$RAG_LLM_MODEL"'
