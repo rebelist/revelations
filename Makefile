@@ -19,12 +19,12 @@ check:
 
 tests:
 	@echo "\nRunning tests..."
-	@poetry run pytest -vv  --cache-clear --color=yes --no-header --maxfail=1 --failed-first
+	@uv run pytest -vv  --cache-clear --color=yes --no-header --maxfail=1 --failed-first
 
 coverage:
 	@echo "\nGenerating test coverage..."
-	@poetry run coverage run -m pytest --no-summary --quiet
-	@poetry run coverage html
+	@uv run coverage run -m pytest --no-summary --quiet
+	@uv run coverage html
 
 # Avoid treating the argument as a target
 %:

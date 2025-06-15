@@ -34,6 +34,7 @@ dev = [
     "pytest>=8.3.5",
     "pytest-mock>=3.14.1",
     "ruff>=0.11.12",
+    "types-mock>=5.2.0.20250516",
 ]
 
 [project.scripts]
@@ -100,6 +101,16 @@ convention = "google"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--strict-markers --strict-config"
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests"
+]
 
 ### coverage ###
 

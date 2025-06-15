@@ -89,18 +89,19 @@ class XHTMLParser:
         return self._get_inner_text(element, ' ')
 
     def _get_inner_text(self, element: Tag, separator: str = '') -> str:
-        """A helper to get text from all children of an element."""
-        # Only process children that are Tag or NavigableString
-        return separator.join(
-            filter(
-                None,
-                (
-                    self._process_element(child)
-                    for child in element.children
-                    if isinstance(child, (Tag, NavigableString))
-                ),
-            )
-        )
+        """Processes child elements and joins their output with smart trimming."""
+        parts: List[str] = []
+
+        for child in element.children:
+            if isinstance(child, (Tag, NavigableString)):
+                text = self._process_element(child).strip()
+                if text:
+                    parts.append(text)
+
+        result = separator.join(parts)
+
+        # Optionally clean up spaces before punctuation
+        return result.replace(' .', '.').replace(' ,', ',').replace(' !', '!').replace(' ?', '?')
 
     def _handle_paragraph(self, element: Tag) -> str:
         """Handles <p> tags."""
