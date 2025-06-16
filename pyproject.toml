@@ -102,7 +102,7 @@ convention = "google"
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-python_files = ["*_test.py"]
+python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "--strict-markers --strict-config"
