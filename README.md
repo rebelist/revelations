@@ -26,6 +26,6 @@ Point it to any space, index the pages, and ask questions, instantly get relevan
 4. The app returns an answer based on the scanned Confluence documentation.
 5. Type `exit` to quit.
 
-### Optional: How to shudown Streamline
+### Optional: How to shudown Revelations
 
 Run `make shutdown`
