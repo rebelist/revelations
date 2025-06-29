@@ -1,10 +1,8 @@
-ARG PYTHON_VERSION=3.13.3
-ARG UV_VERSION=0.7.12
+ARG PYTHON_VERSION=3.13.5
 
 FROM python:${PYTHON_VERSION}-slim
 
-ARG UV_VERSION
-
+ARG UV_VERSION=0.7.16
 LABEL mantainer="Fran <rebelist.software@icloud.com>"
 
 ENV UV_COMPILE_BYTECODE=1
@@ -21,6 +19,6 @@ WORKDIR /home/revelations/app
 
 COPY --chown=revelations:rebelist ./ .
 
-RUN pip install --no-cache-dir uv==0.7.12 && uv sync --locked --no-dev
+RUN pip install --no-cache-dir "uv==${UV_VERSION}" && uv sync --locked --no-dev
 
 ENTRYPOINT ["tail", "-f", "/dev/null"]
