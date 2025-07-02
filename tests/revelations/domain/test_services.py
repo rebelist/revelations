@@ -133,10 +133,10 @@ class TestResponseGeneratorPort:
 
         class MockResponseGenerator(ResponseGeneratorPort):
             def respond(self, question: str, documents: Iterable[ContextDocument]) -> Response:
-                return Response(answer='No documents found', documents=[])
+                return Response(answer='No documents found.', documents=[])
 
         generator = MockResponseGenerator()
         result = generator.respond('test question', [])
 
-        assert result.answer == 'No documents found'
+        assert result.answer == 'No documents found.'
         assert len(list(result.documents)) == 0

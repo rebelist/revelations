@@ -1,27 +1,46 @@
-# Revelations
+<h1 align="center"><img src="docs/images/revelations.png" alt="Revelations"/></h1>
+<p align="center">
+  <b>Instant Answers from Confluence Spaces</b><br>
+  Lightweight prototype for querying Confluence documentation locally using natural language.
+</p>
 
-###  Instant Answers from a Confluence documents
+<p align="center">
+   <a href="https://github.com/rebelist/revelations/releases"><img src="https://img.shields.io/badge/Version-0.2.0--dev-gold" alt="Version" /></a>
+   <a href="https://www.gnu.org/licenses/gpl-3.0.html"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3" /></a>
+   <a href="https://github.com/rebelist/revelations/actions/workflows/tests.yaml"><img src="https://github.com/rebelist/revelations/actions/workflows/tests.yaml/badge.svg" /></a>
+   <a href="https://codecov.io/gh/rebelist/revelations" ><img src="https://codecov.io/gh/rebelist/revelations/graph/badge.svg?token=0FWI5KLNLH"/></a>
+</p>
 
-**Revelations** is a lightweight, offline, open-source Retrieval-Augmented Generation (RAG) app that scans a Confluence space
+<p align="center">
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.13-blue?logo=python&logoColor=white" alt="Python" /></a>
+  <a href="https://www.mongodb.com/"><img src="https://img.shields.io/badge/Database-MongoDB-4ea94b?logo=mongodb&logoColor=white" alt="MongoDB" /></a>
+  <a href="https://qdrant.tech/"><img src="https://img.shields.io/badge/VectorDB-Qdrant-e6462c?logo=qdrant&logoColor=white" alt="Qdrant" /></a>
+  <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Container-Docker-2496ED?logo=docker&logoColor=white" alt="Docker" /></a>
+</p>
+
+**Revelations** is a an offline, open-source Retrieval-Augmented Generation (RAG) app that scans a Confluence space
 and lets you query your internal documentation using natural language.
 Point it to any space, index the pages, and ask questions, instantly get relevant answers using your preferred language model (local or remote).
 
-### Disclaimer
-This application is experimental and was developed for learning purposes. While it can be further tuned and optimized, the latency from the generative model is currently too high for practical use on an average personal computer.
+## ⚠️ Disclaimer
 
-### 1. How to initialize
+This project is a prototype built for learning and experimentation. It is not optimized for performance, and on a typical personal machine the latency from the language model can be high.
+
+---
+
+## Initialization
 
 1. Run `make init`
 2. Add the variables `CONFLUENCE_HOST`, `CONFLUENCE_TOKEN` and `CONFLUENCE_SPACE` to the **.env** file.
 3. Run `make start`
 
-### 2. How to load data from  a confluence space
+## Load data from a Confluence space
 
 1. Run `bin/console data:fetch`
 2. After it finishes, run `bin/console data:vectorize`
 3. All confluence space data is now in the local storage.
 
-### 3. How to search
+## Search
 
 1. Run `bin/console echo:run`
 2. Ask a question e.g. _"What is the problem with Pimcore?"_ or _"How session handling works in Evelin?"_
@@ -29,6 +48,6 @@ This application is experimental and was developed for learning purposes. While 
 4. The app returns an answer based on the scanned Confluence documentation.
 5. Type `exit` to quit.
 
-### Optional: How to shutdown
+## Optional: Shutdown
 
 Run `make shutdown`
