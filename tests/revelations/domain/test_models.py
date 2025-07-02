@@ -40,17 +40,17 @@ class TestContextDocument:
     def mock_document(self) -> Document:
         """Creates a sample Document instance for testing with basic test data."""
         return Document(
-            id=1, title='Test Document', content='Test Content', modified_at=datetime.now(), raw='Raw Content'
+            id=1, title='Test Document!', content='Test Content', modified_at=datetime.now(), raw='Raw Content'
         )
 
     @pytest.fixture
     def mock_context_document(self) -> ContextDocument:
         """Creates a sample ContextDocument instance for testing with basic test data."""
-        return ContextDocument(title='Test Context', content='Test Content', modified_at=datetime.now())
+        return ContextDocument(title='Test Context!', content='Test Content', modified_at=datetime.now())
 
     def test_context_document_creation(self, mock_context_document: ContextDocument) -> None:
         """Tests that a ContextDocument can be created with the correct title and content."""
-        assert mock_context_document.title == 'Test Context'
+        assert mock_context_document.title == 'Test Context!'
         assert mock_context_document.content == 'Test Content'
 
     def test_context_document_with_modified_at(self) -> None:
