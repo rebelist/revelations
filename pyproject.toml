@@ -47,7 +47,6 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/rebelist"]
 
-
 ### pyright ###
 
 [tool.pyright]

@@ -2,7 +2,7 @@ ARG PYTHON_VERSION=3.13.5
 
 FROM python:${PYTHON_VERSION}-slim
 
-ARG UV_VERSION=0.7.16
+ARG UV_VERSION=0.7
 LABEL mantainer="Fran <rebelist.software@icloud.com>"
 
 ENV UV_COMPILE_BYTECODE=1
@@ -17,8 +17,10 @@ USER revelations
 
 WORKDIR /home/revelations/app
 
-COPY --chown=revelations:rebelist ./ .
+COPY --chown=revelations:rebelist . .
 
 RUN pip install --no-cache-dir "uv==${UV_VERSION}" && uv sync --locked --no-dev
 
-ENTRYPOINT ["tail", "-f", "/dev/null"]
+# Keep the container running indefinitely without consuming CPU.
+# This allows fast execution of commands using `docker exec` without restarting the container each time.
+ENTRYPOINT ["sleep", "infinity"]

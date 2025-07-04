@@ -1,9 +1,8 @@
-from rebelist.revelations.domain import ContextWriterPort
-from rebelist.revelations.infrastructure.mongo import MongoDocumentRepository
+from rebelist.revelations.domain import ContextWriterPort, DocumentRepositoryPort
 
 
 class DataVectorizeUseCase:
-    def __init__(self, repository: MongoDocumentRepository, context_writer: ContextWriterPort):
+    def __init__(self, repository: DocumentRepositoryPort, context_writer: ContextWriterPort):
         self.__repository = repository
         self.__context_writer = context_writer
 
