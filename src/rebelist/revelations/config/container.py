@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Final, Mapping
 
+import loguru
 from atlassian import Confluence
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Singleton
@@ -17,6 +18,7 @@ from sentence_transformers import CrossEncoder
 from rebelist.revelations.application.use_cases import DataFetchUseCase, DataVectorizeUseCase, SemanticSearchUseCase
 from rebelist.revelations.config.settings import load_settings
 from rebelist.revelations.infrastructure.confluence import ConfluenceGateway
+from rebelist.revelations.infrastructure.logging import Logger
 from rebelist.revelations.infrastructure.mongo import MongoDocumentRepository
 from rebelist.revelations.infrastructure.ollama import OllamaAdapter
 from rebelist.revelations.infrastructure.qdrant import QdrantContextReader, QdrantContextWriter
@@ -67,6 +69,7 @@ class Container(DeclarativeContainer):
     )
 
     ### Public Services ###
+    logger = Singleton(Logger, loguru.logger)
 
     mongo_client = Singleton(MongoClient, host=settings.provided.mongo.uri, tz_aware=True)
 
@@ -94,8 +97,8 @@ class Container(DeclarativeContainer):
 
     document_repository = Singleton(MongoDocumentRepository, database, settings.provided.mongo.source_collection)
 
-    data_fetch_use_case = Singleton(DataFetchUseCase, confluence_gateway, document_repository)
+    data_fetch_use_case = Singleton(DataFetchUseCase, confluence_gateway, document_repository, logger)
 
-    data_vectorize_use_case = Singleton(DataVectorizeUseCase, document_repository, context_writer)
+    data_vectorize_use_case = Singleton(DataVectorizeUseCase, document_repository, context_writer, logger)
 
-    semantic_search_use_case = Singleton(SemanticSearchUseCase, context_reader, ollama_adapter)
+    semantic_search_use_case = Singleton(SemanticSearchUseCase, context_reader, ollama_adapter, logger)

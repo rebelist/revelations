@@ -19,7 +19,7 @@ WORKDIR /home/revelations/app
 
 COPY --chown=revelations:rebelist . .
 
-RUN pip install --no-cache-dir "uv==${UV_VERSION}" && uv sync --locked --no-dev
+RUN pip install --no-cache-dir "uv~=${UV_VERSION}" && uv sync --locked --no-dev
 
 # Keep the container running indefinitely without consuming CPU.
 # This allows fast execution of commands using `docker exec` without restarting the container each time.

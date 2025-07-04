@@ -6,7 +6,8 @@ import pytest
 from pytest_mock import MockerFixture
 
 from rebelist.revelations.application.use_cases.data_vectorizer import DataVectorizeUseCase
-from rebelist.revelations.domain import ContextWriterPort, Document
+from rebelist.revelations.domain import ContextWriterPort, Document, DocumentRepositoryPort
+from rebelist.revelations.domain.services import LoggerPort
 from rebelist.revelations.infrastructure.mongo import MongoDocumentRepository
 
 
@@ -37,14 +38,16 @@ class TestDataVectorizeUseCase:
         """Prepares the use case with mocked repository and context writer."""
         mock_repository: MagicMock = mocker.Mock(spec_set=MongoDocumentRepository)
         mock_writer: MagicMock = mocker.Mock(spec_set=ContextWriterPort)
+        mock_logger = mocker.create_autospec(LoggerPort)
         mock_repository.find_all.return_value = document_fixtures
 
-        use_case = DataVectorizeUseCase(repository=mock_repository, context_writer=mock_writer)
+        use_case = DataVectorizeUseCase(repository=mock_repository, context_writer=mock_writer, logger=mock_logger)
 
         return {
             'use_case': use_case,
             'repository': mock_repository,
             'writer': mock_writer,
+            'logging': mock_logger,
             'documents': document_fixtures,
         }
 
@@ -61,3 +64,24 @@ class TestDataVectorizeUseCase:
         assert mock_writer.add.call_count == len(documents)
         for doc in documents:
             mock_writer.add.assert_any_call(doc)
+
+    def test_error_in_repository_is_handled(self, mocker: MockerFixture, document_fixtures: list[Document]) -> None:
+        """Ensures that exceptions in repository.find_all are caught and re-raised."""
+        mock_repository = mocker.create_autospec(DocumentRepositoryPort, instance=True)
+        mock_writer = mocker.create_autospec(ContextWriterPort, instance=True)
+        mock_logger = mocker.create_autospec(LoggerPort)
+        mock_repository.find_all.side_effect = Exception('Repository error')
+        use_case = DataVectorizeUseCase(repository=mock_repository, context_writer=mock_writer, logger=mock_logger)
+        with pytest.raises(Exception, match='Repository error'):
+            use_case()
+
+    def test_error_in_context_writer_is_handled(self, mocker: MockerFixture, document_fixtures: list[Document]) -> None:
+        """Ensures that exceptions in context_writer.add are caught and re-raised."""
+        mock_repository = mocker.create_autospec(DocumentRepositoryPort, instance=True)
+        mock_writer = mocker.create_autospec(ContextWriterPort, instance=True)
+        mock_logger = mocker.create_autospec(LoggerPort)
+        mock_repository.find_all.return_value = document_fixtures
+        mock_writer.add.side_effect = Exception('Writer error')
+        use_case = DataVectorizeUseCase(repository=mock_repository, context_writer=mock_writer, logger=mock_logger)
+        with pytest.raises(Exception, match='Writer error'):
+            use_case()

@@ -15,68 +15,80 @@ from rich.markdown import Markdown
 @click.pass_context
 def data_initialize(context: Context, drop: bool) -> None:
     """Initializes the application."""
-    container = context.obj
-    settings = container.settings()
+    try:
+        container = context.obj
+        settings = container.settings()
 
-    # Mongo
-    mongo: Database[Mapping[str, Any]] = container.database()
-    source_document_collection_name = settings.mongo.source_collection
+        # Mongo
+        mongo: Database[Mapping[str, Any]] = container.database()
+        source_document_collection_name = settings.mongo.source_collection
 
-    # Qdrant
-    qdrant: QdrantClient = container.qdrant_client()
-    context_document_collection_name = settings.qdrant.context_collection
+        # Qdrant
+        qdrant: QdrantClient = container.qdrant_client()
+        context_document_collection_name = settings.qdrant.context_collection
 
-    message = 'All databases will be ' + click.style('dropped', fg='bright_magenta') + ' Do you want to continue?'
+        message = 'All databases will be ' + click.style('dropped', fg='bright_magenta') + ' Do you want to continue?'
 
-    if drop and click.confirm(message):
-        mongo.drop_collection(source_document_collection_name)
-        qdrant.delete_collection(context_document_collection_name)
+        if drop and click.confirm(message):
+            mongo.drop_collection(source_document_collection_name)
+            qdrant.delete_collection(context_document_collection_name)
 
-    if not qdrant.collection_exists(context_document_collection_name):
-        params = VectorParams(size=settings.rag.embedding_dimension, distance=Distance.COSINE)
-        qdrant.create_collection(context_document_collection_name, params)
+        if not qdrant.collection_exists(context_document_collection_name):
+            params = VectorParams(size=settings.rag.embedding_dimension, distance=Distance.COSINE)
+            qdrant.create_collection(context_document_collection_name, params)
 
-    mongo_collection = mongo[source_document_collection_name]
-    mongo_collection.create_index('id', unique=True)
+        mongo_collection = mongo[source_document_collection_name]
+        mongo_collection.create_index('id', unique=True)
 
-    qdrant.close()
+        qdrant.close()
 
-    # Download Re-ranker
-    snapshot_download(repo_id=settings.rag.ranker_model_name, local_dir=settings.rag.ranker_model_path)
+        # Download Re-ranker
+        snapshot_download(repo_id=settings.rag.ranker_model_name, local_dir=settings.rag.ranker_model_path)
 
-    click.secho('The application have been successfully initialized.', fg='white')
-    click.secho('Bye!', fg='white')
+        click.secho('The application have been successfully initialized.', fg='white')
+    except Exception as e:
+        click.secho(f'Error initializing data: {e}', fg='red')
+    finally:
+        click.secho('Bye!', fg='white')
 
 
 @click.command(name='data:fetch')
 @click.pass_context
 def data_fetcher(context: Context) -> None:
     """Retrieves and stores documents into the port."""
-    container = context.obj
-    command = container.data_fetch_use_case()
-    space = container.settings().confluence.space
-    console = Console()
+    try:
+        container = context.obj
+        command = container.data_fetch_use_case()
+        space = container.settings().confluence.space
+        console = Console()
 
-    with console.status('[bold yellow]Pulling data from the source...[/bold yellow]', spinner='dots'):
-        command()
+        with console.status('[bold yellow]Pulling data from the source...[/bold yellow]', spinner='dots'):
+            command()
 
-    click.secho(f'Documents from the space "{space}" have been successfully pulled from the source.', fg='white')
-    click.secho('Bye!', fg='white')
+        click.secho(f'Documents from the space "{space}" have been successfully pulled from the source.', fg='white')
+    except Exception as e:
+        click.secho(f'Error fetching data: {e}', fg='red')
+    finally:
+        click.secho('Bye!', fg='white')
 
 
 @click.command(name='data:vectorize')
 @click.pass_context
 def data_vectorizer(context: Context) -> None:
     """Index and structure documents for RAG context retrieval."""
-    container = context.obj
-    command = container.data_vectorize_use_case()
-    console = Console()
+    try:
+        container = context.obj
+        command = container.data_vectorize_use_case()
+        console = Console()
 
-    with console.status('[bold yellow]Vectorizing documents...[/bold yellow]', spinner='dots'):
-        command()
+        with console.status('[bold yellow]Vectorizing documents...[/bold yellow]', spinner='dots'):
+            command()
 
-    click.secho('Documents have been successfully vectorized.', fg='white')
-    click.secho('Bye!', fg='white')
+        click.secho('Documents have been successfully vectorized.', fg='white')
+    except Exception as e:
+        click.secho(f'Error vectorizing data: {e}', fg='red')
+    finally:
+        click.secho('Bye!', fg='white')
 
 
 @click.command(name='echo:run')
@@ -108,5 +120,7 @@ def semantic_search(context: Context, evidence: bool) -> None:
 
         except KeyboardInterrupt:
             break
+        except Exception as e:
+            click.secho(f'Error during semantic search: {e}', fg='red')
 
     click.secho('Bye!', fg='white')

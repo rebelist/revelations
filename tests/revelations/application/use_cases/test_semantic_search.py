@@ -6,6 +6,7 @@ import pytest
 
 from rebelist.revelations.application.use_cases.semantic_search import SemanticSearchUseCase
 from rebelist.revelations.domain import ContextDocument, ContextReaderPort, Response, ResponseGeneratorPort
+from rebelist.revelations.domain.services import LoggerPort
 
 
 class TestSemanticSearchUseCase:
@@ -55,7 +56,8 @@ class TestSemanticSearchUseCase:
         mock_response_generator: ResponseGeneratorPort,
     ) -> None:
         """Tests that the __call__ method returns the correct Response based on mocks."""
-        use_case = SemanticSearchUseCase(mock_context_reader, mock_response_generator)
+        mock_logger = create_autospec(LoggerPort)
+        use_case = SemanticSearchUseCase(mock_context_reader, mock_response_generator, mock_logger)
         query = 'What is quantum entanglement?'
 
         result = use_case(query)
@@ -64,3 +66,22 @@ class TestSemanticSearchUseCase:
         cast(MagicMock, mock_response_generator.respond).assert_called_once_with(query, document_fixtures)
 
         assert result is response_fixture
+
+    def test_error_in_context_reader_is_handled(self, mock_response_generator: ResponseGeneratorPort) -> None:
+        """Ensures that exceptions in context_reader.search are caught and re-raised."""
+        mock_context_reader: MagicMock = create_autospec(ContextReaderPort, instance=True)
+        mock_logger: MagicMock = create_autospec(LoggerPort)
+        mock_context_reader.search.side_effect = Exception('ContextReader error')
+        use_case = SemanticSearchUseCase(mock_context_reader, mock_response_generator, mock_logger)
+        with pytest.raises(Exception, match='ContextReader error'):
+            use_case('test query')
+
+    def test_error_in_response_generator_is_handled(self, mock_context_reader: ContextReaderPort) -> None:
+        """Ensures that exceptions in response_generator.respond are caught and re-raised."""
+        mock_response_generator: MagicMock = create_autospec(ResponseGeneratorPort, instance=True)
+        mock_logger = create_autospec(LoggerPort)
+        mock_context_reader.search = MagicMock(return_value=[])
+        mock_response_generator.respond.side_effect = Exception('ResponseGenerator error')
+        use_case = SemanticSearchUseCase(mock_context_reader, mock_response_generator, mock_logger)
+        with pytest.raises(Exception, match='ResponseGenerator error'):
+            use_case('test query')

@@ -46,3 +46,17 @@ class ResponseGeneratorPort(ABC):
         )
 
         return prompt
+
+
+class LoggerPort(ABC):
+    @abstractmethod
+    def info(self, message: str, *args: Any, **kwargs: Any) -> None:
+        """Log information messages."""
+
+    @abstractmethod
+    def warning(self, message: str, *args: Any, **kwargs: Any) -> None:
+        """Log warning messages."""
+
+    @abstractmethod
+    def error(self, message: str, *args: Any, **kwargs: Any) -> None:
+        """Log error messages."""

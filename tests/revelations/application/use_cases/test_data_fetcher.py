@@ -7,6 +7,7 @@ from pytest_mock import MockerFixture
 
 from rebelist.revelations.application.use_cases.data_fetcher import DataFetchUseCase
 from rebelist.revelations.domain import ContentProviderPort, Document, DocumentRepositoryPort
+from rebelist.revelations.domain.services import LoggerPort
 from rebelist.revelations.infrastructure.confluence import XHTMLParser
 
 
@@ -26,17 +27,20 @@ class TestDataFetchUseCase:
         """Sets up the use case along with mocked dependencies."""
         mock_provider: MagicMock = mocker.Mock(spec_set=ContentProviderPort)
         mock_repository: MagicMock = mocker.Mock(spec_set=DocumentRepositoryPort)
+        mock_logger = mocker.create_autospec(LoggerPort)
         mock_provider.fetch.return_value = [page_fixture]
 
         use_case = DataFetchUseCase(
             content_provider=mock_provider,
             repository=mock_repository,
+            logger=mock_logger,
         )
 
         return {
             'use_case': use_case,
             'provider': mock_provider,
             'repository': mock_repository,
+            'logging': mock_logger,
             'page': page_fixture,
         }
 
@@ -58,3 +62,24 @@ class TestDataFetchUseCase:
         assert saved_doc.content == XHTMLParser(page['content']).text()
         assert saved_doc.raw == page['raw']
         assert isinstance(saved_doc.modified_at, datetime)
+
+    def test_error_in_content_provider_is_handled(self, mocker: MockerFixture) -> None:
+        """Ensures that exceptions in content_provider.fetch are caught and re-raised."""
+        mock_provider = mocker.create_autospec(ContentProviderPort)
+        mock_repository = mocker.create_autospec(DocumentRepositoryPort)
+        mock_logger = mocker.create_autospec(LoggerPort)
+        mock_provider.fetch.side_effect = Exception('Provider error')
+        use_case = DataFetchUseCase(content_provider=mock_provider, repository=mock_repository, logger=mock_logger)
+        with pytest.raises(Exception, match='Provider error'):
+            use_case()
+
+    def test_error_in_repository_is_handled(self, mocker: MockerFixture, page_fixture: dict[str, Any]) -> None:
+        """Ensures that exceptions in repository.save are caught and re-raised."""
+        mock_provider = mocker.create_autospec(ContentProviderPort)
+        mock_repository = mocker.create_autospec(DocumentRepositoryPort)
+        mock_logger = mocker.create_autospec(LoggerPort)
+        mock_provider.fetch.return_value = [page_fixture]
+        mock_repository.save.side_effect = Exception('Repository error')
+        use_case = DataFetchUseCase(content_provider=mock_provider, repository=mock_repository, logger=mock_logger)
+        with pytest.raises(Exception, match='Repository error'):
+            use_case()
