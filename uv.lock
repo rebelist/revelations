@@ -426,21 +426,6 @@ wheels = [
 ]
 
 [[package]]
-name = "hatchling"
-version = "1.27.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "packaging" },
-    { name = "pathspec" },
-    { name = "pluggy" },
-    { name = "trove-classifiers" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/8f/8a/cc1debe3514da292094f1c3a700e4ca25442489731ef7c0814358816bb03/hatchling-1.27.0.tar.gz", hash = "sha256:971c296d9819abb3811112fc52c7a9751c8d381898f36533bb16f9791e941fd6", size = 54983, upload-time = "2024-12-15T17:08:11.894Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/08/e7/ae38d7a6dfba0533684e0b2136817d667588ae3ec984c1a4e5df5eb88482/hatchling-1.27.0-py3-none-any.whl", hash = "sha256:d3a2f3567c4f926ea39849cdf924c7e99e6686c9c8e288ae1037c8fa2a5d937b", size = 75794, upload-time = "2024-12-15T17:08:10.364Z" },
-]
-
-[[package]]
 name = "hf-xet"
 version = "1.1.9"
 source = { registry = "https://pypi.org/simple" }
@@ -1141,15 +1126,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pathspec"
-version = "0.12.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ca/bc/f35b8446f4531a7cb215605d100cd88b7ac6f44ab3fc94870c120ab3adbf/pathspec-0.12.1.tar.gz", hash = "sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712", size = 51043, upload-time = "2023-12-10T22:30:45Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/cc/20/ff623b09d963f88bfde16306a54e12ee5ea43e9b597108672ff3a408aad6/pathspec-0.12.1-py3-none-any.whl", hash = "sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08", size = 31191, upload-time = "2023-12-10T22:30:43.14Z" },
-]
-
-[[package]]
 name = "pillow"
 version = "11.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1520,7 +1496,6 @@ dependencies = [
     { name = "atlassian-python-api" },
     { name = "beautifulsoup4" },
     { name = "dependency-injector" },
-    { name = "hatchling" },
     { name = "huggingface-hub" },
     { name = "langchain" },
     { name = "langchain-community" },
@@ -1530,19 +1505,13 @@ dependencies = [
     { name = "langchain-text-splitters" },
     { name = "langchainhub" },
     { name = "loguru" },
-    { name = "pre-commit" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "pymongo" },
-    { name = "pyright" },
-    { name = "pytest-cov" },
-    { name = "pytest-mock" },
     { name = "python-dotenv" },
     { name = "qdrant-client" },
     { name = "rich-click" },
-    { name = "ruff" },
     { name = "sentence-transformers" },
-    { name = "types-mock" },
 ]
 
 [package.dev-dependencies]
@@ -1558,43 +1527,36 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "atlassian-python-api", specifier = ">=4.0.7,<5" },
-    { name = "beautifulsoup4", specifier = ">=4.13,<5" },
-    { name = "dependency-injector", specifier = ">=4.47.1,<5" },
-    { name = "hatchling", specifier = ">=1.27.0,<2" },
-    { name = "huggingface-hub", specifier = ">=0.34.4,<1" },
-    { name = "langchain", specifier = ">=0.3.27,<1" },
-    { name = "langchain-community", specifier = ">=0.3.24,<1" },
-    { name = "langchain-core", specifier = ">=0.3.63,<1" },
-    { name = "langchain-ollama", specifier = ">=0.3.3,<1" },
-    { name = "langchain-qdrant", specifier = ">=0.2.0,<1" },
-    { name = "langchain-text-splitters", specifier = ">=0.3.9,<1" },
-    { name = "langchainhub", specifier = ">=0.1.21,<1" },
-    { name = "loguru", specifier = ">=0.7.3,<1" },
-    { name = "pre-commit", specifier = ">=4.2.0" },
-    { name = "pydantic", specifier = ">=2.11.5,<3" },
-    { name = "pydantic-settings", specifier = ">=2.9.1,<3" },
-    { name = "pymongo", specifier = ">=4.13.0,<5" },
-    { name = "pyright", specifier = ">=1.1.401" },
-    { name = "pytest-cov", specifier = ">=6.2.1" },
-    { name = "pytest-mock", specifier = ">=3.14.1" },
-    { name = "python-dotenv", specifier = ">=1.1.0,<2" },
-    { name = "qdrant-client", specifier = ">=1.14.2,<2" },
-    { name = "rich-click", specifier = ">=1.8.9,<2" },
-    { name = "ruff", specifier = ">=0.12.1" },
-    { name = "sentence-transformers", specifier = ">=5.1.0" },
-    { name = "types-mock", specifier = ">=5.2.0.20250516,<6" },
+    { name = "atlassian-python-api", specifier = ">=4.0.7,<5.0.0" },
+    { name = "beautifulsoup4", specifier = ">=4.13,<5.0.0" },
+    { name = "dependency-injector", specifier = ">=4.47.1,<5.0.0" },
+    { name = "huggingface-hub", specifier = ">=0.34.4,<1.0.0" },
+    { name = "langchain", specifier = ">=0.3.27,<1.0.0" },
+    { name = "langchain-community", specifier = ">=0.3.24,<1.0.0" },
+    { name = "langchain-core", specifier = ">=0.3.63,<1.0.0" },
+    { name = "langchain-ollama", specifier = ">=0.3.3,<1.0.0" },
+    { name = "langchain-qdrant", specifier = ">=0.2.0,<1.0.0" },
+    { name = "langchain-text-splitters", specifier = ">=0.3.9,<1.0.0" },
+    { name = "langchainhub", specifier = ">=0.1.21,<1.0.0" },
+    { name = "loguru", specifier = ">=0.7.3,<1.0.0" },
+    { name = "pydantic", specifier = ">=2.11.5,<3.0.0" },
+    { name = "pydantic-settings", specifier = ">=2.9.1,<3.0.0" },
+    { name = "pymongo", specifier = ">=4.13.0,<5.0.0" },
+    { name = "python-dotenv", specifier = ">=1.1.0,<2.0.0" },
+    { name = "qdrant-client", specifier = ">=1.14.2,<2.0.0" },
+    { name = "rich-click", specifier = ">=1.8.9,<2.0.0" },
+    { name = "sentence-transformers", specifier = ">=5.1.0,<6.0.0" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "pre-commit", specifier = ">=4.3.0" },
-    { name = "pyright", specifier = ">=1.1.405" },
-    { name = "pytest", specifier = ">=8.4.2" },
-    { name = "pytest-cov", specifier = ">=6.3.0" },
-    { name = "pytest-mock", specifier = ">=3.15.0" },
-    { name = "ruff", specifier = ">=0.12.12" },
-    { name = "types-mock", specifier = ">=5.2.0.20250809" },
+    { name = "pre-commit", specifier = ">=4.3.0,<5.0.0" },
+    { name = "pyright", specifier = ">=1.1.405,<2.0.0" },
+    { name = "pytest", specifier = ">=8.4.2,<9.0.0" },
+    { name = "pytest-cov", specifier = ">=7.0.0,<8.0.0" },
+    { name = "pytest-mock", specifier = ">=3.15.0,<4.0.0" },
+    { name = "ruff", specifier = ">=0.12.12,<1.0.0" },
+    { name = "types-mock", specifier = ">=5.2.0.20250809,<6.0.0" },
 ]
 
 [[package]]
@@ -2028,15 +1990,6 @@ dependencies = [
 wheels = [
     { url = "https://files.pythonhosted.org/packages/30/7b/0a685684ed5322d2af0bddefed7906674f67974aa88b0fae6e82e3b766f6/triton-3.4.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:00be2964616f4c619193cb0d1b29a99bd4b001d7dc333816073f92cf2a8ccdeb", size = 155569223, upload-time = "2025-07-30T19:58:44.017Z" },
     { url = "https://files.pythonhosted.org/packages/20/63/8cb444ad5cdb25d999b7d647abac25af0ee37d292afc009940c05b82dda0/triton-3.4.0-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:7936b18a3499ed62059414d7df563e6c163c5e16c3773678a3ee3d417865035d", size = 155659780, upload-time = "2025-07-30T19:58:51.171Z" },
-]
-
-[[package]]
-name = "trove-classifiers"
-version = "2025.9.8.13"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/3c/5f/971620e58d01e22f14e461bf5319bba41d1bdcf5a4fca638822f58808ee7/trove_classifiers-2025.9.8.13.tar.gz", hash = "sha256:2de91c8f286b7fea55072061924f69e7f3bdf7a9cb63719c90090e41c6657d3a", size = 16955, upload-time = "2025-09-08T13:52:35.82Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/2a/7a/77c26691f16056708551a85884e871dddf75f3fdafa2a4051030ef9e1aa8/trove_classifiers-2025.9.8.13-py3-none-any.whl", hash = "sha256:f784db2f859ee1ffa168adaf0868006c20dee5e673a3ff813a2cd51ef2c465f9", size = 14130, upload-time = "2025-09-08T13:52:34.573Z" },
 ]
 
 [[package]]
