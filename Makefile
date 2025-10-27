@@ -4,8 +4,8 @@ start:
 	@echo "\nStarting Revelations..."
 	@if [ ! -f ".env" ]; then cp ".env.example" ".env"; fi
 	@docker-compose up -d
-	@docker-compose exec -t ollama sh -c 'ollama pull "$$RAG_LLM_MODEL"'
-	@docker-compose exec -t ollama sh -c 'ollama pull "$$RAG_EMBEDDING_MODEL"'
+	# @docker-compose exec -t ollama sh -c 'ollama pull "$$RAG_LLM_MODEL"'
+	# @docker-compose exec -t ollama sh -c 'ollama pull "$$RAG_EMBEDDING_MODEL"'
 
 shutdown:
 	@echo "\nShutting down Revelations..."

@@ -3,7 +3,7 @@ name = "rebelist-revelations"
 version = "0.1.0"
 description = "A RAG application that scans Confluence for instant answers from your internal documentation."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
     "atlassian-python-api>=4.0.4",
     "beautifulsoup4>=4.13.4",
