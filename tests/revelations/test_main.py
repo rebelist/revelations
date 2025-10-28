@@ -67,7 +67,7 @@ class TestConsoleCLI:
         """Should verify command names are attached to the CLI group."""
         available = set(console.commands.keys())
         assert len(available) > 0
-        expected = {'store:initialize', 'data:fetch', 'data:vectorize', 'echo:run'}
+        expected = {'store:initialize', 'data:fetch', 'data:vectorize', 'chat:run'}
         assert expected.issubset(available)
 
     def test_context_obj_is_set(self, runner: CliRunner) -> None:

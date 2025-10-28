@@ -91,7 +91,7 @@ def data_vectorizer(context: Context) -> None:
         click.secho('Bye!', fg='white')
 
 
-@click.command(name='echo:run')
+@click.command(name='chat:run')
 @click.option('--evidence', is_flag=True, help='Shows evidence information from the documentation on every answer.')
 @click.pass_context
 def semantic_search(context: Context, evidence: bool) -> None:

@@ -48,10 +48,12 @@ class QdrantContextReader(ContextReaderPort):
 
     def search(self, query: str, limit: int) -> Iterable[ContextDocument]:
         """Searches for context documents based on a query embedding."""
-        items = self.__store.similarity_search(query, k=limit)
+        items = self.__store.similarity_search_with_score(query, k=limit)
         documents: list[ContextDocument] = []
 
-        for item in items:
+        for item, score in items:
+            if score < 0.5:
+                continue
             title = cast(str, item.metadata.get('title', ''))
             modified_at = datetime.fromisoformat(cast(str, item.metadata.get('modified_at')))
 
@@ -63,9 +65,12 @@ class QdrantContextReader(ContextReaderPort):
                 )
             )
 
+        if len(documents) <= 5:
+            return documents
+
         documents = self.rerank(query, documents)
 
-        return documents[:10]
+        return documents[:5]
 
     def rerank(self, query: str, documents: Iterable[ContextDocument]) -> list[ContextDocument]:
         """Re-ranks documents by relevance to the query using a cross-encoder model."""

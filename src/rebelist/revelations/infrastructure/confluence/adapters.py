@@ -20,7 +20,7 @@ class ConfluenceGateway(ContentProviderPort):
         """Finds content_provider pages in a given space."""
         documents = cast(
             Documents,
-            self.__client.get_all_pages_from_space(
+            self.__client.get_all_pages_from_space_as_generator(
                 self.__space, start=0, limit=20, expand='body.storage', status='current'
             ),
         )

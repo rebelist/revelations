@@ -28,8 +28,12 @@ def sample_context_documents() -> List[ContextDocument]:
     """A list of sample ContextDocuments for reranking/search tests."""
     now = datetime(2024, 2, 15, 10, 30, 0)
     return [
-        ContextDocument(title='Alpha', content='Alpha content', modified_at=now),
-        ContextDocument(title='Beta', content='Beta content', modified_at=now),
+        ContextDocument(title='1', content='1 content', modified_at=now),
+        ContextDocument(title='2', content='2 content', modified_at=now),
+        ContextDocument(title='3', content='3 content', modified_at=now),
+        ContextDocument(title='4', content='4 content', modified_at=now),
+        ContextDocument(title='5', content='5 content', modified_at=now),
+        ContextDocument(title='6', content='6 content', modified_at=now),
     ]
 
 
@@ -79,12 +83,15 @@ class TestQdrantContextReader:
         mock_ranker.predict.return_value = [0.6, 0.9]
 
         qdrant_docs = [
-            Mock(page_content=doc.content, metadata={'title': doc.title, 'modified_at': doc.modified_at.isoformat()})
+            (
+                Mock(content=doc.content, metadata={'title': doc.title, 'modified_at': doc.modified_at.isoformat()}),
+                0.9,
+            )
             for doc in sample_context_documents
         ]
 
         store_mock = Mock()
-        store_mock.similarity_search.return_value = qdrant_docs
+        store_mock.similarity_search_with_score.return_value = qdrant_docs
         mock_vector_store.return_value = store_mock
 
         reader = QdrantContextReader(
@@ -95,7 +102,7 @@ class TestQdrantContextReader:
 
         assert len(results) == 2
         assert isinstance(results[0], ContextDocument)
-        assert store_mock.similarity_search.call_count == 1
+        assert store_mock.similarity_search_with_score.call_count == 1
         assert mock_ranker.predict.call_count == 1
 
     @patch('rebelist.revelations.infrastructure.qdrant.adapters.QdrantVectorStore')
@@ -111,6 +118,6 @@ class TestQdrantContextReader:
         reader = QdrantContextReader(mock_client, mock_embed, 'c', mock_ranker)
         reranked = reader.rerank('query text', sample_context_documents)
 
-        assert reranked[0].title == 'Beta'
-        assert reranked[1].title == 'Alpha'
+        assert reranked[0].title == '2'
+        assert reranked[1].title == '1'
         assert isinstance(reranked[0], ContextDocument)

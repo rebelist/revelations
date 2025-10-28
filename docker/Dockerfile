@@ -1,8 +1,8 @@
-ARG PYTHON_VERSION=3.13.7
+ARG PYTHON_VERSION=3.14
 
 FROM python:${PYTHON_VERSION}-slim
 
-ARG UV_VERSION=0.8
+ARG UV_VERSION=0.9
 LABEL mantainer="Fran <rebelist.software@icloud.com>"
 
 ENV UV_COMPILE_BYTECODE=1

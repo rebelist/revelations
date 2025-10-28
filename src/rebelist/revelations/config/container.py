@@ -75,8 +75,13 @@ class Container(DeclarativeContainer):
 
     qdrant_client = Singleton(QdrantClient, host=settings.provided.qdrant.host, port=settings.provided.qdrant.port)
 
-    ollama_client = Singleton(Ollama, model=settings.provided.rag.llm_model, base_url=settings.provided.ollama.uri)
-
+    ollama_client = Singleton(
+        Ollama,
+        model=settings.provided.rag.llm_model,
+        base_url=settings.provided.ollama.uri,
+        request_timeout=60.0,  # Add connection pooling and timeout settings
+        temperature=0.1,  # Lower temperature for more consistent responses
+    )
     ollama_adapter = Singleton(OllamaAdapter, ollama_client)
 
     context_writer = Singleton(

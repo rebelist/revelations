@@ -124,7 +124,7 @@ class TestResponseGeneratorPort:
         generator = MockResponseGenerator()
         prompt = generator.get_prompt()
 
-        assert 'You are an expert Q&A system' in prompt
+        assert 'You are a highly-skilled Q&A assistan' in prompt
         assert '{context}' in prompt
         assert '{question}' in prompt
 

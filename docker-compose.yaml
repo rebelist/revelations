@@ -1,16 +1,16 @@
 services:
-  echo:
+  chat:
     build:
       context: .
       dockerfile: ./docker/Dockerfile
-    container_name: rebelist-revelations-echo
+    container_name: rebelist-revelations-chat
     restart: no
     env_file:
       - .env
     networks:
       - revelations
     volumes:
-      - ./docker/echo/models:/home/revelations/models
+      - ./docker/chat/models:${RAG_RANKER_MODEL_PATH}
 
 
   mongo:
@@ -36,7 +36,7 @@ services:
       - ./docker/mongo/mongosh.conf:/etc/mongosh.conf:ro
 
   qdrant:
-    image: qdrant/qdrant:v1.15.3
+    image: qdrant/qdrant:v1.15.5
     restart: always
     container_name: rebelist-revelations-qdrant
     ports:
@@ -53,7 +53,7 @@ services:
       - ./docker/qdrant/production.yaml:/qdrant/config/production.yaml:ro
 
   ollama:
-    image: ollama/ollama:0.11.6
+    image: ollama/ollama:0.12.6
     container_name: rebelist-revelations-ollama
     ports:
       - "11434:11434"

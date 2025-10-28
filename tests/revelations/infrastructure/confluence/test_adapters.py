@@ -32,7 +32,7 @@ class TestConfluenceGateway:
     def mock_client(self, mocker: MockerFixture, document_fixtures: list[dict[str, Any]]) -> MagicMock:
         """Mock client."""
         client = mocker.Mock(spec=Confluence)
-        client.get_all_pages_from_space.return_value = document_fixtures
+        client.get_all_pages_from_space_as_generator.return_value = document_fixtures
         return client
 
     def test_fetch_yields_transformed_documents(self, mock_client: MagicMock, document_fixtures: list[dict[str, Any]]):
@@ -51,6 +51,6 @@ class TestConfluenceGateway:
             assert isinstance(result['modified_at'], datetime)
             assert datetime.now() - result['modified_at'] < timedelta(seconds=5)
 
-        mock_client.get_all_pages_from_space.assert_called_once_with(
+        mock_client.get_all_pages_from_space_as_generator.assert_called_once_with(
             'DOCS', start=0, limit=20, expand='body.storage', status='current'
         )
