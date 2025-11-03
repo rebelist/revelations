@@ -1,4 +1,4 @@
-.PHONY: check tests coverage start shutdown init
+.PHONY: init start dev shutdown check tests coverage
 
 init:
 	@echo "\nRevelations has been initialized."
@@ -6,15 +6,22 @@ init:
 
 start:
 	@echo "\nStarting Revelations..."
-	@docker-compose build
+	@docker-compose --profile prod build
+	@docker-compose --profile prod up -d
+	@docker-compose --profile prod exec -t ollama sh -c 'ollama pull "$$RAG_LLM_MODEL"'
+	@docker-compose --profile prod exec -t ollama sh -c 'ollama pull "$$RAG_EMBEDDING_MODEL"'
+	@bin/console store:initialize
+
+dev:
+	@echo "\nStarting Revelations for development..."
 	@docker-compose up -d
 	@docker-compose exec -t ollama sh -c 'ollama pull "$$RAG_LLM_MODEL"'
 	@docker-compose exec -t ollama sh -c 'ollama pull "$$RAG_EMBEDDING_MODEL"'
-	@bin/console store:initialize
+	@revelations store:initialize
 
 shutdown:
 	@echo "\nShutting down Revelations..."
-	@docker-compose down
+	@docker-compose --profile prod down
 
 check:
 	@echo "\nRunning pre-commit all or a specific hook..."

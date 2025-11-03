@@ -49,6 +49,8 @@ class ResponseGeneratorPort(ABC):
             '* **No Relevant Facts:** If **no relevant facts** are present in the context to answer the question, '
             'your response must be the single sentence: '
             '"**I cannot find the answer to your question in the provided documentation.**"\n\n'
+            '--- Conversation History ---\n'
+            '**{chat_history}**\n'
             '--- Context ---\n'
             '{context}\n'
             '--- Question ---\n'

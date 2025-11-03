@@ -27,8 +27,8 @@ class RagSettings(BaseSettings):
 
     embedding_model: str = ''
     embedding_dimension: str = ''
-    embedding_chunk_size: int = 400
-    embedding_chunk_overlap: int = 70
+    embedding_chunk_size: int = 800
+    embedding_chunk_overlap: int = 200
     llm_model: str = ''
     ranker_model_path: str = ''
     ranker_model_name: str = ''
