@@ -3,6 +3,8 @@ from typing import Any, Mapping
 import rich_click as click
 from click import Context, style
 from huggingface_hub import snapshot_download  # type: ignore[reportUnknownVariableType]
+from prompt_toolkit import prompt
+from prompt_toolkit.formatted_text import HTML
 from pymongo.synchronous.database import Database
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
@@ -100,16 +102,22 @@ def semantic_search(context: Context, evidence: bool) -> None:
     command = container.semantic_search_use_case()
     click.secho('Welcome to Revelations! Ask questions about the documentation or type "exit" to quit.', fg='white')
     console = Console(highlight=False)
+
+    prompt_text = HTML('\n<ansigreen><b>👤 YOU:</b></ansigreen> ')
+
     while True:
         try:
-            question = click.prompt(style('\n👤 YOU', bold=True, fg='green'))
+            question = prompt(prompt_text).strip()
 
-            if question.strip().lower() == 'exit':
+            if question.lower() == 'exit':
                 break
+
+            if not question:
+                continue
 
             response = command(question)
 
-            click.echo(style('🤖 ECHO: ', bold=True, fg='yellow'), nl=False)
+            click.echo(style('\n🤖 ECHO: ', bold=True, fg='yellow'))
             console.print(Markdown(response.answer.strip(), justify='left'))
 
             if evidence:
@@ -119,6 +127,7 @@ def semantic_search(context: Context, evidence: bool) -> None:
                     )
 
         except KeyboardInterrupt:
+            click.echo()
             break
         except Exception as e:
             click.secho(f'Error during semantic search: {e}', fg='red')

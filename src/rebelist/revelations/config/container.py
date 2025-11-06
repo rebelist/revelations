@@ -7,8 +7,7 @@ import loguru
 from atlassian import Confluence
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Singleton
-from langchain_ollama import OllamaEmbeddings
-from langchain_ollama import OllamaLLM as Ollama
+from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pymongo import MongoClient
 from pymongo.synchronous.database import Database
@@ -75,14 +74,14 @@ class Container(DeclarativeContainer):
 
     qdrant_client = Singleton(QdrantClient, host=settings.provided.qdrant.host, port=settings.provided.qdrant.port)
 
-    ollama_client = Singleton(
-        Ollama,
+    ollama_chat = Singleton(
+        ChatOllama,
         model=settings.provided.rag.llm_model,
         base_url=settings.provided.ollama.uri,
         request_timeout=60.0,  # Add connection pooling and timeout settings
         temperature=0.1,  # Lower temperature for more consistent responses
     )
-    ollama_adapter = Singleton(OllamaAdapter, ollama_client)
+    ollama_adapter = Singleton(OllamaAdapter, ollama_chat)
 
     context_writer = Singleton(
         QdrantContextWriter,

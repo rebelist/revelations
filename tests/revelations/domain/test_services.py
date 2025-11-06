@@ -122,7 +122,7 @@ class TestResponseGeneratorPort:
                 return Response(answer='', documents=[])
 
         generator = MockResponseGenerator()
-        prompt = generator.get_prompt()
+        prompt = generator.get_system_prompt()
 
         assert 'You are a highly-skilled Q&A assistan' in prompt
         assert '{context}' in prompt

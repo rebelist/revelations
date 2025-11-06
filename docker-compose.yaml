@@ -52,6 +52,7 @@ services:
   ollama:
     image: ollama/ollama:0.12.9
     container_name: rebelist-revelations-ollama
+    profiles: [ "prod" ]
     ports:
       - "11434:11434"
     restart: unless-stopped

@@ -15,13 +15,18 @@ start:
 dev:
 	@echo "\nStarting Revelations for development..."
 	@docker-compose up -d
-	@docker-compose exec -t ollama sh -c 'ollama pull "$$RAG_LLM_MODEL"'
-	@docker-compose exec -t ollama sh -c 'ollama pull "$$RAG_EMBEDDING_MODEL"'
+	@brew services start ollama
+	@sleep 2
+	@echo "Pulling Ollama models..."
+	@set -a && . ./.env && set +a && \
+    ollama pull $$RAG_LLM_MODEL && \
+    ollama pull $$RAG_EMBEDDING_MODEL
 	@revelations store:initialize
 
 shutdown:
 	@echo "\nShutting down Revelations..."
 	@docker-compose --profile prod down
+	@brew services stop ollama
 
 check:
 	@echo "\nRunning pre-commit all or a specific hook..."
