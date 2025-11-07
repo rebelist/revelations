@@ -122,11 +122,12 @@ class TestResponseGeneratorPort:
                 return Response(answer='', documents=[])
 
         generator = MockResponseGenerator()
-        prompt = generator.get_system_prompt()
+        system_prompt = generator.get_system_prompt()
+        user_prompt = generator.get_user_prompt()
 
-        assert 'You are a highly-skilled Q&A assistan' in prompt
-        assert '{context}' in prompt
-        assert '{question}' in prompt
+        assert 'You are a senior co-worker and an expert' in system_prompt
+        assert '{context}' in user_prompt
+        assert '{question}' in user_prompt
 
     def test_respond_with_empty_documents(self) -> None:
         """Tests that the "respond" method can handle empty document lists."""

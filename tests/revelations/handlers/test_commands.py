@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 from typing import cast
+from unittest.mock import patch
 
 import pytest
 from click import Command
@@ -59,6 +60,7 @@ class TestCLICommands:
         assert result.exit_code == 0
         assert 'vectorized' in result.output.lower()
 
+    @patch('rebelist.revelations.handlers.commands.prompt', return_value='exit')
     def test_semantic_search_quits_on_exit(self, fake_container: SimpleNamespace):
         """Test echo:run exits gracefully on 'exit'."""
         runner = CliRunner()
