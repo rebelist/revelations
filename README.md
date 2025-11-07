@@ -27,6 +27,10 @@ Point it to any space, index the pages, and ask questions, instantly get relevan
 This project is a prototype built for learning and experimentation. It is not optimized for performance, and on a typical personal machine the latency from the language model can be high.
 
 ---
+## Development Requirements
+* [Python 3.13](https://www.python.org/downloads/)
+* [Docker](https://docs.docker.com/desktop/)
+* [Ollama](https://ollama.com/download)
 
 ## Initialization
 
