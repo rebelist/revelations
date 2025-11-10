@@ -145,9 +145,7 @@ class XHTMLParser:
         """Handles Confluence-specific <ac:structured-macro> tags."""
         name_raw: Any = element.get('ac:name')
         macro_name: str = name_raw.lower() if isinstance(name_raw, str) else 'macro'
-        body: Optional[Tag] = cast(
-            Optional[Tag], element.find('ac:rich-text-body') or element.find('ac:plain-text-body')
-        )
+        body: Optional[Tag] = element.find('ac:rich-text-body') or element.find('ac:plain-text-body')
 
         if not body:
             return ''

@@ -30,17 +30,13 @@ shutdown:
 
 check:
 	@echo "\nRunning pre-commit all or a specific hook..."
-	@pre-commit run $(filter-out $@,$(MAKECMDGOALS))
+	@pre-commit run --all-files
 
 tests:
 	@echo "\nRunning tests..."
-	@uv run pytest -vv  --cache-clear --color=yes --no-header --maxfail=1 --failed-first
+	@uv run pytest -vv --cache-clear --color=yes --no-header --maxfail=1 --failed-first
 
 coverage:
 	@echo "\nGenerating test coverage..."
 	@uv run coverage run -m pytest --no-summary --quiet
 	@uv run coverage html
-
-# Avoid treating the argument as a target
-%:
-	@:
