@@ -125,7 +125,7 @@ class TestResponseGeneratorPort:
         system_prompt = generator.get_system_prompt()
         user_prompt = generator.get_user_prompt()
 
-        assert 'You are a senior co-worker and an expert' in system_prompt
+        assert 'You are a helpful senior colleague' in system_prompt
         assert '{context}' in user_prompt
         assert '{question}' in user_prompt
 
