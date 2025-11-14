@@ -27,11 +27,13 @@ class RagSettings(BaseSettings):
 
     embedding_model: str = ''
     embedding_dimension: str = ''
-    embedding_chunk_size: int = 800
-    embedding_chunk_overlap: int = 200
+    chunk_size: int = 0
+    chunk_overlap: int = 0
     llm_model: str = ''
+    tokenizer_model: str = ''
+    tokenizer_model_path: str = ''
+    ranker_model: str = ''
     ranker_model_path: str = ''
-    ranker_model_name: str = ''
 
 
 class ConfluenceSettings(BaseSettings):

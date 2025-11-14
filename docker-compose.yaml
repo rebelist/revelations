@@ -11,7 +11,7 @@ services:
     networks:
       - revelations
     volumes:
-      - ./docker/chat/models:${RAG_RANKER_MODEL_PATH}
+      - ./var/models:/home/revelations/app/var/models
 
   mongo:
     image: mongo:8.0.15
@@ -50,7 +50,7 @@ services:
       - ./docker/qdrant/production.yaml:/qdrant/config/production.yaml:ro
 
   ollama:
-    image: ollama/ollama:0.12.9
+    image: ollama/ollama:0.12.11
     container_name: rebelist-revelations-ollama
     profiles: [ "prod" ]
     ports:

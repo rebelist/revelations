@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Any, Iterable
 
 import pytest
+from pytest_mock import MockerFixture
 
 from rebelist.revelations.domain import ContextDocument, Document, Response
 from rebelist.revelations.domain.services import (
@@ -45,7 +46,12 @@ class TestContextWriterPort:
     def mock_document(self) -> Document:
         """Creates a sample Document instance for testing with basic test data."""
         return Document(
-            id=1, title='Test Document', content='Test Content', modified_at=datetime.now(), raw='Raw Content'
+            id=1,
+            title='Test Document',
+            content='Test Content',
+            modified_at=datetime.now(),
+            raw='Raw Content',
+            url='https://example.com',
         )
 
     def test_add_abstract_method(self, mock_document: Document) -> None:
@@ -65,29 +71,21 @@ class TestContextReaderPort:
         """Creates a sample ContextDocument instance for testing with basic test data."""
         return ContextDocument(title='Test Context', content='Test Content', modified_at=datetime.now())
 
-    def test_search_abstract_method(self, mock_context_document: ContextDocument) -> None:
+    def test_search_abstract_method(self, mocker: MockerFixture, mock_context_document: ContextDocument) -> None:
         """Tests that the search abstract method correctly returns an iterable of context documents."""
-
-        class MockContextReader(ContextReaderPort):
-            def search(self, query: str, limit: int) -> Iterable[ContextDocument]:
-                return [mock_context_document]
-
-        reader = MockContextReader()
+        reader = mocker.create_autospec(spec=ContextReaderPort)
+        reader.search.return_value = [mock_context_document]
         result = list(reader.search('test', 1))
 
         assert len(result) == 1
         assert result[0].title == mock_context_document.title
         assert result[0].content == mock_context_document.content
 
-    def test_search_with_limit(self, mock_context_document: ContextDocument) -> None:
+    def test_search_with_limit(self, mocker: MockerFixture, mock_context_document: ContextDocument) -> None:
         """Tests that the search method respects the limit parameter."""
+        reader = mocker.create_autospec(spec=ContextReaderPort)
+        reader.search.return_value = [mock_context_document]
 
-        class MockContextReader(ContextReaderPort):
-            def search(self, query: str, limit: int) -> Iterable[ContextDocument]:
-                # Return only one document even though we could return more
-                return [mock_context_document]
-
-        reader = MockContextReader()
         result = list(reader.search('test', 1))
 
         assert len(result) == 1

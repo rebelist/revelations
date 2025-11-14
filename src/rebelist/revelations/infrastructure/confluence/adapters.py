@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Any, Generator, TypeAlias, cast
 
+import pypandoc
 from atlassian import Confluence
 
 from rebelist.revelations.domain import ContentProviderPort
@@ -21,17 +22,30 @@ class ConfluenceGateway(ContentProviderPort):
         documents = cast(
             Documents,
             self.__client.get_all_pages_from_space_as_generator(
-                self.__space, start=0, limit=20, expand='body.storage', status='current'
+                self.__space,
+                start=0,
+                limit=20,
+                expand='body.view',
+                status='current',
             ),
         )
 
         for document in documents:
-            page = {
-                'id': document['id'],
-                'title': document['title'],
-                'content': document['body']['storage']['value'],
-                'raw': document,
-                'modified_at': datetime.now(),
-            }
+            try:
+                html_content = document['body']['view']['value']
+                markdown_content = pypandoc.convert_text(html_content, 'gfm', format='html')
 
-            yield page
+                page = {
+                    'id': document['id'],
+                    'title': document['title'],
+                    'content': markdown_content,
+                    'raw': document,
+                    'modified_at': datetime.now(),
+                    'url': self.__client.url + document['_links']['tinyui'],
+                }
+
+                yield page
+
+            except (KeyError, RuntimeError) as e:
+                # Handle pages that might be malformed or pandoc errors
+                print(f'Skipping page {document.get("id")}: Could not parse HTML. Error: {e}')

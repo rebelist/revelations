@@ -4,7 +4,7 @@ from typing import Iterable, cast
 from langchain_core.documents import Document as InputDocument
 from langchain_ollama import OllamaEmbeddings
 from langchain_qdrant import QdrantVectorStore
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_text_splitters import TextSplitter
 from qdrant_client import QdrantClient
 from sentence_transformers import CrossEncoder
 
@@ -18,7 +18,7 @@ class QdrantContextWriter(ContextWriterPort):
         self,
         client: QdrantClient,
         embedding: OllamaEmbeddings,
-        splitter: RecursiveCharacterTextSplitter,
+        splitter: TextSplitter,
         collection: str,
     ):
         self.__store = QdrantVectorStore(client=client, collection_name=collection, embedding=embedding)
@@ -32,6 +32,7 @@ class QdrantContextWriter(ContextWriterPort):
                 'id': str(document.id),
                 'title': document.title,
                 'modified_at': document.modified_at.isoformat(),
+                'url': document.url,
             },
         )
 
@@ -46,7 +47,7 @@ class QdrantContextReader(ContextReaderPort):
         self.__store = QdrantVectorStore(client=client, collection_name=collection, embedding=embedding)
         self.__ranker = ranker
 
-    def search(self, query: str, limit: int) -> Iterable[ContextDocument]:
+    def search(self, query: str, limit: int) -> list[ContextDocument]:
         """Searches for context documents based on a query embedding."""
         items = self.__store.similarity_search_with_score(query, k=limit)
         documents: list[ContextDocument] = []
@@ -55,22 +56,17 @@ class QdrantContextReader(ContextReaderPort):
             if score < 0.5:
                 continue
             title = cast(str, item.metadata.get('title', ''))
+            url = cast(str, item.metadata.get('url', None))
             modified_at = datetime.fromisoformat(cast(str, item.metadata.get('modified_at')))
 
-            documents.append(
-                ContextDocument(
-                    title=title,
-                    content=item.page_content,
-                    modified_at=modified_at,
-                )
-            )
+            documents.append(ContextDocument(title=title, content=item.page_content, modified_at=modified_at, url=url))
 
         if len(documents) <= 5:
             return documents
 
         documents = self.rerank(query, documents)
 
-        return documents[:5]
+        return documents
 
     def rerank(self, query: str, documents: Iterable[ContextDocument]) -> list[ContextDocument]:
         """Re-ranks documents by relevance to the query using a cross-encoder model."""

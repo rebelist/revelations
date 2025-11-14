@@ -8,7 +8,6 @@ from pytest_mock import MockerFixture
 from rebelist.revelations.application.use_cases.data_fetcher import DataFetchUseCase
 from rebelist.revelations.domain import ContentProviderPort, Document, DocumentRepositoryPort
 from rebelist.revelations.domain.services import LoggerPort
-from rebelist.revelations.infrastructure.confluence import XHTMLParser
 
 
 class TestDataFetchUseCase:
@@ -20,6 +19,7 @@ class TestDataFetchUseCase:
             'title': 'Mocked Page',
             'content': '<p>Hello, world!</p>',
             'raw': '<p>Hello, world!</p>',
+            'url': 'https://example.com',
         }
 
     @pytest.fixture
@@ -59,8 +59,9 @@ class TestDataFetchUseCase:
 
         assert saved_doc.id == page['id']
         assert saved_doc.title == page['title']
-        assert saved_doc.content == XHTMLParser(page['content']).text()
+        assert saved_doc.content == page['content']
         assert saved_doc.raw == page['raw']
+        assert saved_doc.url == page['url']
         assert isinstance(saved_doc.modified_at, datetime)
 
     def test_error_in_content_provider_is_handled(self, mocker: MockerFixture) -> None:

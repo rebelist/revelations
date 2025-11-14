@@ -20,6 +20,7 @@ def sample_document() -> Document:
         content='This is a test document about AI and ML.',
         modified_at=datetime(2024, 2, 15, 10, 30, 0),
         raw='',
+        url=None,
     )
 
 

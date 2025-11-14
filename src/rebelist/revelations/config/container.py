@@ -1,21 +1,23 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Final, Mapping
+from typing import Any, Final, Mapping, cast
 
 import loguru
 from atlassian import Confluence
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Singleton
 from langchain_ollama import ChatOllama, OllamaEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter, TextSplitter
 from pymongo import MongoClient
 from pymongo.synchronous.database import Database
 from qdrant_client import QdrantClient
 from sentence_transformers import CrossEncoder
+from transformers import AutoTokenizer
+from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 
 from rebelist.revelations.application.use_cases import DataFetchUseCase, DataVectorizeUseCase, SemanticSearchUseCase
-from rebelist.revelations.config.settings import load_settings
+from rebelist.revelations.config.settings import RagSettings, load_settings
 from rebelist.revelations.infrastructure.confluence import ConfluenceGateway
 from rebelist.revelations.infrastructure.logging import Logger
 from rebelist.revelations.infrastructure.mongo import MongoDocumentRepository
@@ -40,6 +42,15 @@ class Container(DeclarativeContainer):
     def _get_mongo_database(client: MongoClient[Any]) -> Database[Mapping[str, Any]]:
         return client.get_default_database()
 
+    @staticmethod
+    def _get_text_splitter(settings: RagSettings) -> TextSplitter:
+        tokenizer = cast(PreTrainedTokenizerFast, AutoTokenizer.from_pretrained(settings.tokenizer_model_path))
+        return RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
+            tokenizer=tokenizer,
+            chunk_size=settings.chunk_size,
+            chunk_overlap=settings.chunk_overlap,
+        )
+
     ### Configuration ###
 
     wiring_config = WiringConfiguration(auto_wire=True)
@@ -55,16 +66,15 @@ class Container(DeclarativeContainer):
         OllamaEmbeddings,
         model=settings.provided.rag.embedding_model,
         base_url=settings.provided.ollama.uri,
+        num_ctx=settings.provided.rag.chunk_size,
     )
 
-    __document_splitter = Singleton(
-        RecursiveCharacterTextSplitter,
-        chunk_size=settings.provided.rag.embedding_chunk_size,
-        chunk_overlap=settings.provided.rag.embedding_chunk_overlap,
-    )
+    __document_splitter = Singleton(_get_text_splitter, settings.provided.rag)
 
     __ranker = Singleton(
-        CrossEncoder, model_name_or_path=settings.provided.rag.ranker_model_path, local_files_only=True
+        CrossEncoder,
+        model_name_or_path=settings.provided.rag.ranker_model_path,
+        local_files_only=True,
     )
 
     ### Public Services ###

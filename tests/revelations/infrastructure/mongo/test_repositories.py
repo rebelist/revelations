@@ -18,6 +18,7 @@ def document_fixture() -> Document:
         content='This is the content',
         modified_at=datetime(2024, 2, 15, 10, 30, 0),
         raw='',
+        url=None,
     )
 
 

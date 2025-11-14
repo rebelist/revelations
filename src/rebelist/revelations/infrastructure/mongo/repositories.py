@@ -33,6 +33,7 @@ class MongoDocumentRepository(DocumentRepositoryPort):
                     content=item['content'],
                     modified_at=item['modified_at'],
                     raw=item['raw'],
+                    url=item['url'],
                 )
 
                 yield document

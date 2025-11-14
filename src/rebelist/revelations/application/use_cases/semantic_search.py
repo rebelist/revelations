@@ -13,8 +13,8 @@ class SemanticSearchUseCase:
     def __call__(self, query: str) -> Response:
         """Executes the command."""
         try:
-            documents = self.__context_reader.search(query, 30)
-            response = self.__response_generator.respond(query, documents)
+            documents = self.__context_reader.search(query, 10)
+            response = self.__response_generator.respond(query, documents[:5])
             return response
         except Exception as e:
             self.__logger.error(f'Error in SemanticSearchUseCase: {e}')

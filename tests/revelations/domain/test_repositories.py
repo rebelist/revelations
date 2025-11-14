@@ -12,7 +12,12 @@ class TestDocumentRepositoryPort:
     def mock_document(self) -> Document:
         """Creates a sample Document instance for testing with basic test data."""
         return Document(
-            id=1, title='Test Document', content='Test Content', modified_at=datetime.now(), raw='Raw Content'
+            id=1,
+            title='Test Document',
+            content='Test Content',
+            modified_at=datetime.now(),
+            raw='Raw Content',
+            url='https://example.com',
         )
 
     def test_find_all_abstract_method(self, mock_document: Document) -> None:

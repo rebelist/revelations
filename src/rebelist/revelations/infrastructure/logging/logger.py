@@ -18,7 +18,7 @@ class Logger(LoggerPort):
             rotation='10 MB',
             retention='10 days',
             compression='zip',
-            format='{time:YYYY-MM-DD at HH:mm:ss} | {file.name}:{line} | {message}',
+            format='{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {file.name}:{line} | {message}',
             level='INFO',
         )
 

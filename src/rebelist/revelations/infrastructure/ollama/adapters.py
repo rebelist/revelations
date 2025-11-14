@@ -18,7 +18,7 @@ class OllamaAdapter(ResponseGeneratorPort):
         self.__prompt_template = ChatPromptTemplate.from_messages(
             [
                 ('system', self.get_system_prompt()),
-                MessagesPlaceholder(variable_name=self.HISTORY_KEY),
+                MessagesPlaceholder(variable_name=OllamaAdapter.HISTORY_KEY),
                 ('user', self.get_user_prompt()),
             ]
         )
@@ -40,14 +40,16 @@ class OllamaAdapter(ResponseGeneratorPort):
 
     def respond(self, question: str, documents: Iterable[ContextDocument]) -> Response:
         """Generate an answer given a question and iterable of ContextDocument."""
-        context = ''
-        if documents:
-            context = '\n\n'.join([f'## Document: {doc.title}\n\n{doc.content}' for doc in documents])
+        context: list[str] = []
+
+        for doc in documents:
+            context.append(f'## Document: {doc.title}\nURL: {doc.url}\n\n{doc.content}')
 
         config: RunnableConfig = {'configurable': {'session_id': 'default'}}
 
         answer = self.__chain.invoke(
-            {'question': question, 'context': context},
+            {'question': question, 'context': '\n\n'.join(context)},
             config=config,
         )
+
         return Response(answer=answer, documents=documents)

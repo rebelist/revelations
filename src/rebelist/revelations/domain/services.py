@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from textwrap import dedent
 from typing import Any, Iterable
 
 from rebelist.revelations.domain import ContextDocument, Document, Response
@@ -20,21 +21,22 @@ class ContextWriterPort(ABC):
 
 class ContextReaderPort(ABC):
     @abstractmethod
-    def search(self, query: str, limit: int) -> Iterable[ContextDocument]:
+    def search(self, query: str, limit: int) -> list[ContextDocument]:
         """Searches for context documents based on a query embedding."""
         ...
 
 
 class ResponseGeneratorPort(ABC):
     @abstractmethod
-    def respond(self, question: str, documents: Iterable[ContextDocument]) -> Response:
+    def respond(self, question: str, documents: list[ContextDocument]) -> Response:
         """Generates an answer to the given query using the provided context documents."""
         ...
 
     @staticmethod
     def get_system_prompt() -> str:
         """Get the system prompt."""
-        prompt = """You are a helpful senior colleague who is an expert on the company's documentation and systems.
+        prompt = """
+        You are a helpful senior colleague who is an expert on the company's documentation and systems.
 
         Your role is to assist teammates by providing clear, practical answers - not just search results.
 
@@ -64,19 +66,16 @@ class ResponseGeneratorPort(ABC):
            - Start with the answer immediately
            - Use natural, conversational language
 
+        6. **State references:**
+           - Always cite your sources by including the reference URL at the end of your response in this format:
+            References: URL
+            If multiple documents are used, list all relevant references.
+
         Remember: You're a helpful coworker, not a search engine. Explain things like you're helping someone understand,
         not just providing facts.
+        """
 
-        --- Context ---
-        {context}
-
-        --- Conversation History ---
-        {chat_history}
-
-        --- Current Question ---
-        {question}"""
-
-        return prompt
+        return dedent(prompt).strip()
 
     @staticmethod
     def get_user_prompt() -> str:

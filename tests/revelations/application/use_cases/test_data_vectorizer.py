@@ -23,6 +23,7 @@ class TestDataVectorizeUseCase:
                 content='Some processed content',
                 modified_at=modified_at,
                 raw='<p>raw</p>',
+                url='https://example.com',
             ),
             Document(
                 id=200,
@@ -30,6 +31,7 @@ class TestDataVectorizeUseCase:
                 content='Another one',
                 modified_at=modified_at,
                 raw='<div>raw</div>',
+                url='https://example.com',
             ),
         ]
 

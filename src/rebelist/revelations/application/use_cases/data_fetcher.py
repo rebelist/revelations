@@ -2,7 +2,6 @@ from datetime import datetime
 
 from rebelist.revelations.domain import ContentProviderPort, Document, DocumentRepositoryPort
 from rebelist.revelations.domain.services import LoggerPort
-from rebelist.revelations.infrastructure.confluence import XHTMLParser
 
 
 class DataFetchUseCase:
@@ -24,9 +23,10 @@ class DataFetchUseCase:
                 document = Document(
                     id=page['id'],
                     title=page['title'],
-                    content=XHTMLParser(page['content']).text(),
+                    content=page['content'],
                     modified_at=datetime.now(),
                     raw=page['raw'],
+                    url=page['url'],
                 )
                 self.__repository.save(document)
         except Exception as e:

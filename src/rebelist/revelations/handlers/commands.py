@@ -44,8 +44,12 @@ def data_initialize(context: Context, drop: bool) -> None:
 
         qdrant.close()
 
-        # Download Re-ranker
-        snapshot_download(repo_id=settings.rag.ranker_model_name, local_dir=settings.rag.ranker_model_path)
+        snapshot_download(repo_id=settings.rag.ranker_model, local_dir=settings.rag.ranker_model_path)
+        snapshot_download(
+            repo_id=settings.rag.tokenizer_model,
+            local_dir=settings.rag.tokenizer_model_path,
+            allow_patterns=['*.json'],
+        )
 
         click.secho('The application have been successfully initialized.', fg='white')
     except Exception as e:

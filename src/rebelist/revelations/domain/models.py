@@ -10,6 +10,7 @@ class Document:
     content: str
     modified_at: datetime
     raw: str
+    url: str | None
 
     def as_dict(self) -> dict[str, int | str | datetime]:
         """Converts the document to a dictionary."""
@@ -21,6 +22,7 @@ class ContextDocument:
     title: str
     content: str
     modified_at: datetime
+    url: str | None = None
 
 
 @dataclass(frozen=True)
