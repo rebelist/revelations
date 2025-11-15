@@ -33,9 +33,9 @@ class ResponseGeneratorPort(ABC):
         ...
 
     @staticmethod
-    def get_system_prompt() -> str:
+    def get_system_template() -> str:
         """Get the system prompt."""
-        prompt = """
+        template = """
         You are a helpful senior colleague who is an expert on the company's documentation and systems.
 
         Your role is to assist teammates by providing clear, practical answers - not just search results.
@@ -75,10 +75,10 @@ class ResponseGeneratorPort(ABC):
         not just providing facts.
         """
 
-        return dedent(prompt).strip()
+        return dedent(template).strip()
 
     @staticmethod
-    def get_user_prompt() -> str:
+    def get_human_template() -> str:
         """Get the user prompt."""
         return '--- Context ---\n{context}\n--- Question ---\n{question}'
 

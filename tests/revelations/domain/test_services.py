@@ -120,8 +120,8 @@ class TestResponseGeneratorPort:
                 return Response(answer='', documents=[])
 
         generator = MockResponseGenerator()
-        system_prompt = generator.get_system_prompt()
-        user_prompt = generator.get_user_prompt()
+        system_prompt = generator.get_system_template()
+        user_prompt = generator.get_human_template()
 
         assert 'You are a helpful senior colleague' in system_prompt
         assert '{context}' in user_prompt

@@ -2,7 +2,12 @@ from typing import Any, Final, Iterable, cast
 
 from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import (
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+    MessagesPlaceholder,
+    SystemMessagePromptTemplate,
+)
 from langchain_core.runnables import Runnable, RunnableConfig, RunnableSerializable, RunnableWithMessageHistory
 from langchain_ollama import ChatOllama
 
@@ -17,9 +22,9 @@ class OllamaAdapter(ResponseGeneratorPort):
         self.__chat_history = InMemoryChatMessageHistory()
         self.__prompt_template = ChatPromptTemplate.from_messages(
             [
-                ('system', self.get_system_prompt()),
+                SystemMessagePromptTemplate.from_template(self.get_system_template()),
                 MessagesPlaceholder(variable_name=OllamaAdapter.HISTORY_KEY),
-                ('user', self.get_user_prompt()),
+                HumanMessagePromptTemplate.from_template(self.get_human_template()),
             ]
         )
 
