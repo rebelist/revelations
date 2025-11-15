@@ -30,5 +30,5 @@ class DataFetchUseCase:
                 )
                 self.__repository.save(document)
         except Exception as e:
-            self.__logger.error(f'Error in DataFetchUseCase: {e}')
+            self.__logger.error(f'Data fetch has failed: {e}')
             raise

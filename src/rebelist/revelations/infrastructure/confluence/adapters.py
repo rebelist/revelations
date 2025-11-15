@@ -5,6 +5,7 @@ import pypandoc
 from atlassian import Confluence
 
 from rebelist.revelations.domain import ContentProviderPort
+from rebelist.revelations.domain.services import LoggerPort
 
 Documents: TypeAlias = list[dict[str, Any]]
 Document: TypeAlias = dict[str, Any]
@@ -13,9 +14,10 @@ Document: TypeAlias = dict[str, Any]
 class ConfluenceGateway(ContentProviderPort):
     """Confluence api gateway."""
 
-    def __init__(self, client: Confluence, space: str):
+    def __init__(self, client: Confluence, space: str, logger: LoggerPort):
         self.__client = client
         self.__space = space
+        self.__logger = logger
 
     def fetch(self) -> Generator[dict[str, Any], None, None]:
         """Finds content_provider pages in a given space."""
@@ -33,7 +35,7 @@ class ConfluenceGateway(ContentProviderPort):
         for document in documents:
             try:
                 html_content = document['body']['view']['value']
-                markdown_content = pypandoc.convert_text(html_content, 'gfm', format='html')
+                markdown_content = pypandoc.convert_text(html_content, 'gfm', format='html', extra_args=['--wrap=none'])
 
                 page = {
                     'id': document['id'],
@@ -47,5 +49,4 @@ class ConfluenceGateway(ContentProviderPort):
                 yield page
 
             except (KeyError, RuntimeError) as e:
-                # Handle pages that might be malformed or pandoc errors
-                print(f'Skipping page {document.get("id")}: Could not parse HTML. Error: {e}')
+                self.__logger.error(f'Skipping page {document["id"]}, operation failed: ({type(e).__name__}) {e}.')

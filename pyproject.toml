@@ -1,7 +1,7 @@
 [project]
 name = "rebelist-revelations"
-version = "0.6.0"
-description = "A RAG application that scans Confluence for instant answers from your internal documentation."
+version = "0.6.1"
+description = "An experimental RAG application that scans Confluence for instant answers from your internal documentation."
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [

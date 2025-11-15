@@ -22,5 +22,5 @@ class DataVectorizeUseCase:
 
                 self.__context_writer.add(document)
         except Exception as e:
-            self.__logger.error(f'Error in DataVectorizeUseCase: {e}')
+            self.__logger.error(f'Vectorization has failed: {e}')
             raise

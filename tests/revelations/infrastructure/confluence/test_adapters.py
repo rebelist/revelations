@@ -43,8 +43,9 @@ class TestConfluenceGateway:
         self, mock_pypandoc: MagicMock, mock_client: MagicMock, document_fixtures: list[dict[str, Any]]
     ):
         """Test fetch documents."""
+        mock_logger = MagicMock()
         mock_pypandoc.convert_text.return_value = 'Hello'
-        gateway = ConfluenceGateway(client=mock_client, space='DOCS')
+        gateway = ConfluenceGateway(client=mock_client, space='DOCS', logger=mock_logger)
         results = list(gateway.fetch())
 
         assert len(results) == len(document_fixtures)
@@ -59,6 +60,27 @@ class TestConfluenceGateway:
             assert isinstance(result['modified_at'], datetime)
             assert datetime.now() - result['modified_at'] < timedelta(seconds=5)
 
+        mock_client.get_all_pages_from_space_as_generator.assert_called_once_with(
+            'DOCS', start=0, limit=20, expand='body.view', status='current'
+        )
+
+    def test_fetch_with_corrupted_document(self, mock_client: MagicMock):
+        """Test fetch documents."""
+        mock_logger = MagicMock()
+        gateway = ConfluenceGateway(client=mock_client, space='DOCS', logger=mock_logger)
+
+        documents = [
+            {
+                'id': '123',
+                'title': 'Sample Page',
+                '_links': {'tinyui': '/1'},
+            },
+        ]
+
+        mock_client.get_all_pages_from_space_as_generator.return_value = documents
+
+        assert list(gateway.fetch()) == []
+        mock_logger.error.assert_called_once_with("Skipping page 123, operation failed: (KeyError) 'body'.")
         mock_client.get_all_pages_from_space_as_generator.assert_called_once_with(
             'DOCS', start=0, limit=20, expand='body.view', status='current'
         )

@@ -5,10 +5,10 @@
 </p>
 
 <p align="center">
-   <a href="https://github.com/rebelist/revelations/releases"><img src="https://img.shields.io/badge/Release-0.6.0--dev-e63946?logo=github&logoColor=white" alt="Release" /></a>
+   <a href="https://github.com/rebelist/revelations/releases"><img src="https://img.shields.io/badge/Release-0.6.1--dev-e63946?logo=github&logoColor=white" alt="Release" /></a>
    <a href="https://www.gnu.org/licenses/gpl-3.0.html"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3" /></a>
-   <a href="https://github.com/rebelist/revelations/actions/workflows/tests.yaml"><img src="https://github.com/rebelist/revelations/actions/workflows/tests.yaml/badge.svg" /></a>
-   <a href="https://codecov.io/gh/rebelist/revelations" ><img src="https://codecov.io/gh/rebelist/revelations/graph/badge.svg?token=0FWI5KLNLH"/></a>
+   <a href="https://github.com/rebelist/revelations/actions/workflows/tests.yaml"><img src="https://github.com/rebelist/revelations/actions/workflows/tests.yaml/badge.svg" alt="Tests" /></a>
+   <a href="https://codecov.io/gh/rebelist/revelations" ><img src="https://codecov.io/gh/rebelist/revelations/graph/badge.svg?token=0FWI5KLNLH" alt="Codecov"/></a>
 </p>
 
 <p align="center">
@@ -18,8 +18,7 @@
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Container-Docker-2496ED?logo=docker&logoColor=white" alt="Docker" /></a>
 </p>
 
-**Revelations** is a an offline, open-source Retrieval-Augmented Generation (RAG) app that scans a Confluence space
-and lets you query your internal documentation using natural language.
+**Revelations** is an offline, open-source Retrieval-Augmented Generation (RAG) app that scans a Confluence space and lets you query your internal documentation using natural language.
 Point it to any space, index the pages, and ask questions, instantly get relevant answers using your preferred language model (local or remote).
 
 ## ⚠️ Disclaimer
@@ -36,7 +35,7 @@ This project is a prototype built for learning and experimentation. It is not op
 ## Initialization
 
 1. Run `make init`
-2. Add the variables `CONFLUENCE_HOST`, `CONFLUENCE_TOKEN` and `CONFLUENCE_SPACE` to the **.env** file.
+2. Add the variables `CONFLUENCE_HOST`, `CONFLUENCE_TOKEN` and `CONFLUENCE_SPACE` to the **.env** file if running in development mode, or to the **.env.docker** file if the chat container is being run via Docker.
 3. Run `make start`
 
 ## Load data from a Confluence space

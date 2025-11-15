@@ -64,7 +64,7 @@ class TestQdrantContextWriter:
         writer.add(sample_document)
 
         mock_splitter.split_documents.assert_called_once()
-        mock_vector_store.assert_called_once()
+        mock_vector_store.assert_called_once_with(client=mock_client, collection_name='docs', embedding=mock_embedding)
         store_mock.add_documents.assert_called_once_with(mock_chunks)
 
 

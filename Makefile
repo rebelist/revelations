@@ -3,6 +3,7 @@
 init:
 	@echo "\nRevelations has been initialized."
 	@if [ ! -f ".env" ]; then cp ".env.example" ".env"; fi
+	@if [ ! -f ".env.docker" ]; then cp ".env.example" ".env.docker"; fi
 
 start:
 	@echo "\nStarting Revelations..."

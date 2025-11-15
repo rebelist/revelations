@@ -7,7 +7,7 @@ services:
     profiles: [ "prod" ]
     restart: no
     env_file:
-      - .env
+      - .env.docker
     networks:
       - revelations
     volumes:
@@ -40,7 +40,7 @@ services:
     restart: always
     container_name: rebelist-revelations-qdrant
     ports:
-      - 6333:6333
+      - "6333:6333"
     expose:
       - 6333
     networks:
@@ -59,7 +59,7 @@ services:
     environment:
       OLLAMA_MODELS: /root/.ollama
     env_file:
-      - .env
+      - .env.docker
     networks:
       - revelations
     volumes:

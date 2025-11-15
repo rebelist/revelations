@@ -3,7 +3,7 @@ ARG PYTHON_VERSION=3.13
 FROM python:${PYTHON_VERSION}-slim
 
 ARG UV_VERSION=0.9
-LABEL mantainer="Fran <rebelist.software@icloud.com>"
+LABEL mantainer="Fran <rebelist.dev@icloud.com>"
 
 ENV UV_COMPILE_BYTECODE=1
 ENV PYTHONUNBUFFERED=1
