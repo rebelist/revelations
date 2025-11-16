@@ -19,7 +19,7 @@ def fake_container(mocker: MockerFixture):
     settings.rag.embedding_dimension = 768
     settings.rag.ranker_model_path = '/tmp/model'
     settings.rag.ranker_model_name = 'mock/ranker'
-    settings.confluence.space = 'DOCS'
+    settings.confluence.spaces = 'DOCS'
 
     mongo = mocker.MagicMock()
     mongo.__getitem__.return_value = mocker.MagicMock()
@@ -47,7 +47,7 @@ class TestCLICommands:
         assert 'successfully initialized' in result.output.lower()
 
     def test_data_fetcher_runs_successfully(self, fake_container: SimpleNamespace):
-        """Test data:fetch calls its use case and prints space."""
+        """Test data:fetch calls its use case and prints spaces."""
         runner = CliRunner()
         result = runner.invoke(cast(Command, data_fetcher), obj=fake_container)
         assert result.exit_code == 0

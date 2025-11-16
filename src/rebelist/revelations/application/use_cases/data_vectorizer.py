@@ -5,7 +5,7 @@ from rebelist.revelations.domain.services import LoggerPort
 
 
 class DataVectorizeUseCase:
-    CONTENT_LENGTH_LIMIT: Final[int] = 200_000
+    CONTENT_LENGTH_LIMIT: Final[int] = 500_000
 
     def __init__(self, repository: DocumentRepositoryPort, context_writer: ContextWriterPort, logger: LoggerPort):
         self.__repository = repository

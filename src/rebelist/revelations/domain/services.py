@@ -71,7 +71,8 @@ class ResponseGeneratorPort(ABC):
 
         6. **State references:**
            - Always cite your sources by including the reference URL at the end of your response in this format:
-            References: URL
+            References:
+            - URL (State the url do not transform it to a markdown link)
             If multiple documents are used, list all relevant references.
 
         Remember: You're a helpful coworker, not a search engine. Explain things like you're helping someone understand,
@@ -84,7 +85,7 @@ class ResponseGeneratorPort(ABC):
     def get_human_template() -> str:
         """Get the user prompt."""
         template = f"""
-        --- Context ---
+        --- Context in Github's Markdown Format (gfm) ---
         {{{ResponseGeneratorPort.HUMAN_TEMPLATE_CONTEXT_KEY}}}
         --- Question ---
         {{{ResponseGeneratorPort.HUMAN_TEMPLATE_INPUT_KEY}}}

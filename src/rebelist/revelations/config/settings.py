@@ -1,10 +1,11 @@
 from functools import lru_cache
 from importlib import metadata
 from pathlib import Path
-from typing import Final
+from typing import Annotated, Final
 
 from dotenv import load_dotenv
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 PACKAGE_NAME: Final[str] = 'rebelist-revelations'
 PROJECT_ROOT: Final[str] = str(Path(__file__).resolve().parents[4])
@@ -43,7 +44,15 @@ class ConfluenceSettings(BaseSettings):
 
     host: str = ''
     token: str = ''
-    space: str = ''
+    spaces: Annotated[tuple[str, ...], NoDecode] = ()
+
+    @field_validator('spaces', mode='before')
+    @classmethod
+    def parse_spaces(cls, value: str | tuple[str, ...]) -> tuple[str, ...]:
+        """Parse comma separated string into tuple of spaces, or return existing tuple."""
+        if isinstance(value, str):
+            return tuple(element.strip() for element in value.split(','))
+        return value
 
 
 class MongoSettings(BaseSettings):

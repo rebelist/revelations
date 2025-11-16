@@ -19,13 +19,21 @@ class TestConfluenceGateway:
             {
                 'id': '123',
                 'title': 'Sample Page',
-                'body': {'view': {'value': '<p>Sample content</p>'}},
+                'body': {
+                    'export_view': {
+                        'value': '<p>Purple elephants often walk slowly while drinking refreshing green tea.</p>'
+                    }
+                },
                 '_links': {'tinyui': '/1'},
             },
             {
                 'id': '456',
                 'title': 'Another Page',
-                'body': {'view': {'value': '<p>More content</p>'}},
+                'body': {
+                    'export_view': {
+                        'value': '<p>Purple elephants often walk slowly while drinking refreshing green tea.</p>'
+                    }
+                },
                 '_links': {'tinyui': '/2'},
             },
         ]
@@ -44,8 +52,10 @@ class TestConfluenceGateway:
     ):
         """Test fetch documents."""
         mock_logger = MagicMock()
-        mock_pypandoc.convert_text.return_value = 'Hello'
-        gateway = ConfluenceGateway(client=mock_client, space='DOCS', logger=mock_logger)
+        mock_pypandoc.convert_text.return_value = (
+            'Purple elephants often walk slowly while drinking refreshing green tea.'
+        )
+        gateway = ConfluenceGateway(client=mock_client, spaces=('DOCS',), logger=mock_logger)
         results = list(gateway.fetch())
 
         assert len(results) == len(document_fixtures)
@@ -54,20 +64,20 @@ class TestConfluenceGateway:
             expected = document_fixtures[i]
             assert result['id'] == expected['id']
             assert result['title'] == expected['title']
-            assert result['content'] == 'Hello'
+            assert result['content'] == 'Purple elephants often walk slowly while drinking refreshing green tea.'
             assert result['url'] == mock_client.url + expected['_links']['tinyui']
             assert result['raw'] == expected
             assert isinstance(result['modified_at'], datetime)
             assert datetime.now() - result['modified_at'] < timedelta(seconds=5)
 
         mock_client.get_all_pages_from_space_as_generator.assert_called_once_with(
-            'DOCS', start=0, limit=20, expand='body.view', status='current'
+            'DOCS', start=0, limit=20, expand='body.export_view', status='current'
         )
 
     def test_fetch_with_corrupted_document(self, mock_client: MagicMock):
         """Test fetch documents."""
         mock_logger = MagicMock()
-        gateway = ConfluenceGateway(client=mock_client, space='DOCS', logger=mock_logger)
+        gateway = ConfluenceGateway(client=mock_client, spaces=('DOCS',), logger=mock_logger)
 
         documents = [
             {
@@ -82,5 +92,5 @@ class TestConfluenceGateway:
         assert list(gateway.fetch()) == []
         mock_logger.error.assert_called_once_with("Skipping page 123, operation failed: (KeyError) 'body'.")
         mock_client.get_all_pages_from_space_as_generator.assert_called_once_with(
-            'DOCS', start=0, limit=20, expand='body.view', status='current'
+            'DOCS', start=0, limit=20, expand='body.export_view', status='current'
         )

@@ -62,7 +62,7 @@ class TestSemanticSearchUseCase:
 
         result = use_case(query)
 
-        cast(MagicMock, mock_context_reader.search).assert_called_once_with(query, 10)
+        cast(MagicMock, mock_context_reader.search).assert_called_once_with(query, 20)
         cast(MagicMock, mock_response_generator.respond).assert_called_once_with(query, document_fixtures)
 
         assert result is response_fixture

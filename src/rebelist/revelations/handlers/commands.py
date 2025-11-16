@@ -83,13 +83,16 @@ def data_fetcher(context: Context) -> None:
     try:
         container = context.obj
         command = container.data_fetch_use_case()
-        space = container.settings().confluence.space
+        spaces = container.settings().confluence.spaces
         console = Console()
 
         with console.status('[bold yellow]Pulling data from the source...[/bold yellow]', spinner='dots'):
             command()
 
-        click.secho(f'Documents from the space "{space}" have been successfully pulled from the source.', fg='white')
+        click.secho(
+            f'Documents from the spaces "{", ".join(spaces)}" have been successfully pulled from the source.',
+            fg='white',
+        )
     except Exception as e:
         click.secho(f'Error fetching data: {e}', fg='red')
     finally:

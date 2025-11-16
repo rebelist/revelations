@@ -8,7 +8,7 @@ from atlassian import Confluence
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Singleton
 from langchain_ollama import ChatOllama, OllamaEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter, TextSplitter
+from langchain_text_splitters import MarkdownTextSplitter, TextSplitter
 from pymongo import MongoClient
 from pymongo.synchronous.database import Database
 from qdrant_client import QdrantClient
@@ -45,7 +45,7 @@ class Container(DeclarativeContainer):
     @staticmethod
     def _get_text_splitter(settings: RagSettings) -> TextSplitter:
         tokenizer = cast(PreTrainedTokenizerFast, AutoTokenizer.from_pretrained(settings.tokenizer_model_path))
-        return RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
+        return MarkdownTextSplitter.from_huggingface_tokenizer(
             tokenizer=tokenizer,
             chunk_size=settings.chunk_size,
             chunk_overlap=settings.chunk_overlap,
@@ -105,7 +105,7 @@ class Container(DeclarativeContainer):
         QdrantContextReader, qdrant_client, __embedding, settings.provided.qdrant.context_collection, __ranker
     )
 
-    confluence_gateway = Singleton(ConfluenceGateway, __confluence_client, settings.provided.confluence.space, logger)
+    confluence_gateway = Singleton(ConfluenceGateway, __confluence_client, settings.provided.confluence.spaces, logger)
 
     database = Singleton(_get_mongo_database, mongo_client)
 
