@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from textwrap import dedent
-from typing import Any, Iterable
+from typing import Any, Final, Iterable
 
 from rebelist.revelations.domain import ContextDocument, Document, Response
 
@@ -27,6 +27,9 @@ class ContextReaderPort(ABC):
 
 
 class ResponseGeneratorPort(ABC):
+    HUMAN_TEMPLATE_INPUT_KEY: Final[str] = 'question'
+    HUMAN_TEMPLATE_CONTEXT_KEY: Final[str] = 'context'
+
     @abstractmethod
     def respond(self, question: str, documents: list[ContextDocument]) -> Response:
         """Generates an answer to the given query using the provided context documents."""
@@ -80,7 +83,14 @@ class ResponseGeneratorPort(ABC):
     @staticmethod
     def get_human_template() -> str:
         """Get the user prompt."""
-        return '--- Context ---\n{context}\n--- Question ---\n{question}'
+        template = f"""
+        --- Context ---
+        {{{ResponseGeneratorPort.HUMAN_TEMPLATE_CONTEXT_KEY}}}
+        --- Question ---
+        {{{ResponseGeneratorPort.HUMAN_TEMPLATE_INPUT_KEY}}}
+        """
+
+        return dedent(template).strip()
 
 
 class LoggerPort(ABC):

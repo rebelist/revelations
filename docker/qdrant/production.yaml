@@ -1,1 +1,12 @@
 log_level: INFO
+
+# (Hierarchical Navigable Small World)
+hnsw_index:
+  # The number of edges created for each node in the HNSW graph.
+  m: 16
+
+  # The size of the dynamic list of nearest neighbors during index construction.
+  ef_construct: 200
+
+  # The threshold for switching from approximate search (HNSW) to brute-force search.
+  full_scan_threshold: 10000

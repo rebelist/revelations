@@ -1,11 +1,12 @@
 from datetime import datetime
-from typing import Iterable, cast
+from typing import Final, Iterable, cast
 
 from langchain_core.documents import Document as InputDocument
 from langchain_ollama import OllamaEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from langchain_text_splitters import TextSplitter
 from qdrant_client import QdrantClient
+from qdrant_client.models import SearchParams
 from sentence_transformers import CrossEncoder
 
 from rebelist.revelations.domain import ContextDocument, ContextReaderPort, ContextWriterPort, Document
@@ -43,13 +44,16 @@ class QdrantContextWriter(ContextWriterPort):
 class QdrantContextReader(ContextReaderPort):
     """Vector reader adapter."""
 
+    SEARCH_EFFORT: Final[int] = 200
+
     def __init__(self, client: QdrantClient, embedding: OllamaEmbeddings, collection: str, ranker: CrossEncoder):
         self.__store = QdrantVectorStore(client=client, collection_name=collection, embedding=embedding)
         self.__ranker = ranker
 
     def search(self, query: str, limit: int) -> list[ContextDocument]:
         """Searches for context documents based on a query embedding."""
-        items = self.__store.similarity_search_with_score(query, k=limit)
+        search_params = SearchParams(hnsw_ef=QdrantContextReader.SEARCH_EFFORT, exact=False)
+        items = self.__store.similarity_search_with_score(query, k=limit, search_params=search_params)
         documents: list[ContextDocument] = []
 
         for item, score in items:

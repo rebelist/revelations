@@ -36,7 +36,7 @@ class OllamaAdapter(ResponseGeneratorPort):
         self.__chain: Runnable[dict[str, Any], str] = RunnableWithMessageHistory(
             runnable=base_chain,  # type: ignore
             get_session_history=self.__get_session_history,
-            input_messages_key='question',
+            input_messages_key=ResponseGeneratorPort.HUMAN_TEMPLATE_INPUT_KEY,
             history_messages_key=self.HISTORY_KEY,
         )
 
@@ -53,7 +53,10 @@ class OllamaAdapter(ResponseGeneratorPort):
         config: RunnableConfig = {'configurable': {'session_id': 'default'}}
 
         answer = self.__chain.invoke(
-            {'question': question, 'context': '\n\n'.join(context)},
+            {
+                ResponseGeneratorPort.HUMAN_TEMPLATE_INPUT_KEY: question,
+                ResponseGeneratorPort.HUMAN_TEMPLATE_CONTEXT_KEY: '\n\n'.join(context),
+            },
             config=config,
         )
 

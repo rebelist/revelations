@@ -8,6 +8,7 @@ from prompt_toolkit.formatted_text import HTML
 from pymongo.synchronous.database import Database
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
+from qdrant_client.models import HnswConfigDiff, OptimizersConfigDiff
 from rich.console import Console
 from rich.markdown import Markdown
 
@@ -36,8 +37,25 @@ def data_initialize(context: Context, drop: bool) -> None:
             qdrant.delete_collection(context_document_collection_name)
 
         if not qdrant.collection_exists(context_document_collection_name):
-            params = VectorParams(size=settings.rag.embedding_dimension, distance=Distance.COSINE)
-            qdrant.create_collection(context_document_collection_name, params)
+            hnsw_config = HnswConfigDiff(
+                # m = How many direct connections (or "shortcuts") each point gets on the map.
+                m=16,
+                # ef_construct = determines how thoroughly Qdrant searches for optimal connections when building the
+                # HNSW index, directly influencing the final index quality and the time it takes to build.
+                ef_construct=200,
+            )
+
+            # the minimum number of unindexed vectors a collection segment must accumulate before Qdrant's optimizer
+            # will start the HNSW index building process.
+            optimizers_config = OptimizersConfigDiff(indexing_threshold=1000)
+            vector_params = VectorParams(
+                size=settings.rag.embedding_dimension,
+                distance=Distance.COSINE,
+                hnsw_config=hnsw_config,
+            )
+            qdrant.create_collection(
+                context_document_collection_name, vector_params, optimizers_config=optimizers_config
+            )
 
         mongo_collection = mongo[source_document_collection_name]
         mongo_collection.create_index('id', unique=True)
