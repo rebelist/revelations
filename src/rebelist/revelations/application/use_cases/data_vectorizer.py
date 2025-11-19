@@ -17,10 +17,10 @@ class DataVectorizeUseCase:
         try:
             for document in self.__repository.find_all():
                 if len(document.content) > DataVectorizeUseCase.CONTENT_LENGTH_LIMIT:
-                    self.__logger.warning(f'Skipping large document. id="{document.id}" - title="{document.title}"')
+                    self.__logger.warning(f'Skipping large document. [id="{document.id}" - title="{document.title}"]')
                     continue
 
                 self.__context_writer.add(document)
-        except Exception as e:
-            self.__logger.error(f'Vectorization has failed: {e}')
+        except Exception as error:
+            self.__logger.error(f'Vectorization has failed: {error}')
             raise

@@ -1,7 +1,8 @@
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from typing import Any, Final, Generator, TypeAlias, cast
+from itertools import batched
+from typing import Any, Final, Generator, TypeAlias, Union, cast
 
-import pypandoc
 from atlassian import Confluence
 
 from rebelist.revelations.domain import ContentProviderPort
@@ -14,8 +15,9 @@ Document: TypeAlias = dict[str, Any]
 class ConfluenceGateway(ContentProviderPort):
     """Confluence api gateway."""
 
-    PANDOC_OPTIONS: Final[tuple[str, ...]] = ('--wrap=none', '--strip-comments')
-    MIN_DOCUMENT_LENGTH: Final[int] = 50
+    MIN_CONTENT_LENGTH: Final[int] = 200
+    MAX_WORKERS: Final[int] = 5
+    BATCH_SIZE: Final[int] = 500
 
     def __init__(self, client: Confluence, spaces: tuple[str, ...], logger: LoggerPort):
         self.__client = client
@@ -28,39 +30,50 @@ class ConfluenceGateway(ContentProviderPort):
             yield from self.__fetch_from_space(space)
 
     def __fetch_from_space(self, space: str) -> Generator[dict[str, Any], None, None]:
-        """Finds content pages from a confluence space."""
+        """Finds content pages from a confluence space using concurrent processing."""
         documents = cast(
             Documents,
             self.__client.get_all_pages_from_space_as_generator(
                 space,
-                start=0,
-                limit=20,
-                expand='body.export_view',
+                expand='body.export_view,history.lastUpdated',
                 status='current',
             ),
         )
 
-        for document in documents:
-            try:
-                html_content = document['body']['export_view']['value']
-                markdown_content = pypandoc.convert_text(
-                    html_content.strip(),
-                    'gfm+hard_line_breaks-raw_html',
-                    format='html',
-                    extra_args=ConfluenceGateway.PANDOC_OPTIONS,
-                ).strip()
+        batches = batched(documents, ConfluenceGateway.BATCH_SIZE, strict=False)
 
-                if len(markdown_content) > ConfluenceGateway.MIN_DOCUMENT_LENGTH:
-                    page = {
-                        'id': document['id'],
-                        'title': document['title'],
-                        'content': markdown_content,
-                        'raw': document,
-                        'modified_at': datetime.now(),
-                        'url': self.__client.url + document['_links']['tinyui'],
-                    }
+        for batch in batches:
+            with ThreadPoolExecutor(max_workers=self.MAX_WORKERS) as executor:
+                results = executor.map(self.__process_page, batch)
 
-                    yield page
+                for result in results:
+                    match result:
+                        case dict() as page:
+                            yield page
+                        case None:
+                            continue
 
-            except (KeyError, RuntimeError) as e:
-                self.__logger.error(f'Skipping page {document["id"]}, operation failed: ({type(e).__name__}) {e}.')
+    def __process_page(self, document: dict[str, Any]) -> Union[dict[str, Any], None]:
+        """Worker method running in a separate thread."""
+        try:
+            body = document.get('body', {}).get('export_view', {})
+            content = body.get('value', '')
+
+            if len(content) <= ConfluenceGateway.MIN_CONTENT_LENGTH:
+                self.__logger.info(f'Skipping short document. [id={document.get("id")}]')
+                return None
+
+            content_bytes = self.__client.get_page_as_pdf(document['id'])
+
+            return {
+                'id': document['id'],
+                'title': document['title'],
+                'content': content_bytes,
+                'raw': document,
+                'modified_at': datetime.fromisoformat(document['history']['lastUpdated']['when']),
+                'url': self.__client.url + document['_links']['tinyui'],
+            }
+
+        except Exception as error:
+            self.__logger.error(f'Processing document failed [id={document.get("id")}] - {error}')
+            return None

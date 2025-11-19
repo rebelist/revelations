@@ -12,6 +12,7 @@ wheels/
 
 # Project
 var
+data
 .env
 .env.docker
 .coverage

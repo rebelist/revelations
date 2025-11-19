@@ -21,6 +21,7 @@ from rebelist.revelations.config.settings import RagSettings, load_settings
 from rebelist.revelations.infrastructure.confluence import ConfluenceGateway
 from rebelist.revelations.infrastructure.logging import Logger
 from rebelist.revelations.infrastructure.mongo import MongoDocumentRepository
+from rebelist.revelations.infrastructure.mupdf.adapters import PdfConverter
 from rebelist.revelations.infrastructure.ollama import OllamaAdapter
 from rebelist.revelations.infrastructure.qdrant import QdrantContextReader, QdrantContextWriter
 
@@ -59,7 +60,13 @@ class Container(DeclarativeContainer):
     ### Private Services ###
 
     __confluence_client = Singleton(
-        Confluence, url=settings.provided.confluence.host, token=settings.provided.confluence.token
+        Confluence,
+        url=settings.provided.confluence.host,
+        token=settings.provided.confluence.token,
+        backoff_and_retry=True,
+        retry_status_codes=[413, 429, 500, 503],
+        max_backoff_seconds=30,
+        max_backoff_retries=3,
     )
 
     __embedding = Singleton(
@@ -76,6 +83,8 @@ class Container(DeclarativeContainer):
         model_name_or_path=settings.provided.rag.ranker_model_path,
         local_files_only=True,
     )
+
+    __pdf_converter = Singleton(PdfConverter)
 
     ### Public Services ###
     logger = Singleton(Logger, loguru.logger)
@@ -111,7 +120,7 @@ class Container(DeclarativeContainer):
 
     document_repository = Singleton(MongoDocumentRepository, database, settings.provided.mongo.source_collection)
 
-    data_fetch_use_case = Singleton(DataFetchUseCase, confluence_gateway, document_repository, logger)
+    data_fetch_use_case = Singleton(DataFetchUseCase, confluence_gateway, document_repository, __pdf_converter, logger)
 
     data_vectorize_use_case = Singleton(DataVectorizeUseCase, document_repository, context_writer, logger)
 

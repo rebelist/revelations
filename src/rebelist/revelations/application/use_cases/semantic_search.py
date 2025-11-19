@@ -14,8 +14,8 @@ class SemanticSearchUseCase:
         """Executes the command."""
         try:
             documents = self.__context_reader.search(query, 20)
-            response = self.__response_generator.respond(query, documents[:10])
+            response = self.__response_generator.respond(query, documents[:5])
             return response
-        except Exception as e:
-            self.__logger.error(f'Semantic search has failed: {e}')
+        except Exception as error:
+            self.__logger.error(f'Semantic search has failed: {error}')
             raise

@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call
 
 import pytest
 from atlassian import Confluence
@@ -21,9 +21,14 @@ class TestConfluenceGateway:
                 'title': 'Sample Page',
                 'body': {
                     'export_view': {
-                        'value': '<p>Purple elephants often walk slowly while drinking refreshing green tea.</p>'
+                        'value': """
+                        Purple elephants often walk slowly while drinking refreshing green tea.
+                        Purple elephants often walk slowly while drinking refreshing green tea.
+                        Purple elephants often walk slowly while drinking refreshing green tea.
+                        """
                     }
                 },
+                'history': {'lastUpdated': {'when': '2020-11-12T09:04:47.054+01:00'}},
                 '_links': {'tinyui': '/1'},
             },
             {
@@ -31,9 +36,14 @@ class TestConfluenceGateway:
                 'title': 'Another Page',
                 'body': {
                     'export_view': {
-                        'value': '<p>Purple elephants often walk slowly while drinking refreshing green tea.</p>'
+                        'value': """
+                        Purple elephants often walk slowly while drinking refreshing green tea.
+                        Purple elephants often walk slowly while drinking refreshing green tea.
+                        Purple elephants often walk slowly while drinking refreshing green tea.
+                        """
                     }
                 },
+                'history': {'lastUpdated': {'when': '2020-11-12T09:04:47.054+01:00'}},
                 '_links': {'tinyui': '/2'},
             },
         ]
@@ -43,18 +53,13 @@ class TestConfluenceGateway:
         """Mock client."""
         client = mocker.Mock(spec=Confluence)
         client.get_all_pages_from_space_as_generator.return_value = document_fixtures
+        client.get_page_as_pdf.return_value = 'random'.encode('utf-8')
         client.url = 'https://example.com'
         return client
 
-    @patch('rebelist.revelations.infrastructure.confluence.adapters.pypandoc')
-    def test_fetch_yields_transformed_documents(
-        self, mock_pypandoc: MagicMock, mock_client: MagicMock, document_fixtures: list[dict[str, Any]]
-    ):
+    def test_fetch_yields_transformed_documents(self, mock_client: MagicMock, document_fixtures: list[dict[str, Any]]):
         """Test fetch documents."""
         mock_logger = MagicMock()
-        mock_pypandoc.convert_text.return_value = (
-            'Purple elephants often walk slowly while drinking refreshing green tea.'
-        )
         gateway = ConfluenceGateway(client=mock_client, spaces=('DOCS',), logger=mock_logger)
         results = list(gateway.fetch())
 
@@ -64,14 +69,15 @@ class TestConfluenceGateway:
             expected = document_fixtures[i]
             assert result['id'] == expected['id']
             assert result['title'] == expected['title']
-            assert result['content'] == 'Purple elephants often walk slowly while drinking refreshing green tea.'
+            assert result['content'] == 'random'.encode('utf-8')
             assert result['url'] == mock_client.url + expected['_links']['tinyui']
             assert result['raw'] == expected
             assert isinstance(result['modified_at'], datetime)
-            assert datetime.now() - result['modified_at'] < timedelta(seconds=5)
+            assert result['modified_at'] == datetime.fromisoformat(expected['history']['lastUpdated']['when'])
 
+        mock_client.get_page_as_pdf.assert_has_calls([call('123'), call('456')], any_order=True)
         mock_client.get_all_pages_from_space_as_generator.assert_called_once_with(
-            'DOCS', start=0, limit=20, expand='body.export_view', status='current'
+            'DOCS', expand='body.export_view,history.lastUpdated', status='current'
         )
 
     def test_fetch_with_corrupted_document(self, mock_client: MagicMock):
@@ -82,7 +88,15 @@ class TestConfluenceGateway:
         documents = [
             {
                 'id': '123',
-                'title': 'Sample Page',
+                'body': {
+                    'export_view': {
+                        'value': """
+                        Purple elephants often walk slowly while drinking refreshing green tea.
+                        Purple elephants often walk slowly while drinking refreshing green tea.
+                        Purple elephants often walk slowly while drinking refreshing green tea.
+                        """
+                    }
+                },
                 '_links': {'tinyui': '/1'},
             },
         ]
@@ -90,7 +104,10 @@ class TestConfluenceGateway:
         mock_client.get_all_pages_from_space_as_generator.return_value = documents
 
         assert list(gateway.fetch()) == []
-        mock_logger.error.assert_called_once_with("Skipping page 123, operation failed: (KeyError) 'body'.")
+
+        mock_client.get_page_as_pdf.assert_called_once_with('123')
         mock_client.get_all_pages_from_space_as_generator.assert_called_once_with(
-            'DOCS', start=0, limit=20, expand='body.export_view', status='current'
+            'DOCS', expand='body.export_view,history.lastUpdated', status='current'
         )
+
+        mock_logger.error.assert_called_once_with("Processing document failed [id=123] - 'title'")

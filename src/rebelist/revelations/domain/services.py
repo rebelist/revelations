@@ -85,7 +85,7 @@ class ResponseGeneratorPort(ABC):
     def get_human_template() -> str:
         """Get the user prompt."""
         template = f"""
-        --- Context in Github's Markdown Format (gfm) ---
+        --- Context in Markdown Format ---
         {{{ResponseGeneratorPort.HUMAN_TEMPLATE_CONTEXT_KEY}}}
         --- Question ---
         {{{ResponseGeneratorPort.HUMAN_TEMPLATE_INPUT_KEY}}}
@@ -106,3 +106,9 @@ class LoggerPort(ABC):
     @abstractmethod
     def error(self, message: str, *args: Any, **kwargs: Any) -> None:
         """Log error messages."""
+
+
+class PdfConverterPort(ABC):
+    @abstractmethod
+    def pdf_to_markdown(self, data: bytes) -> str:
+        """Converts the raw binary content of a PDF document into a standardized Markdown formatted string."""

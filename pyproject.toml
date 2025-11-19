@@ -1,6 +1,6 @@
 [project]
 name = "rebelist-revelations"
-version = "0.7.0"
+version = "0.8.0"
 description = "An experimental RAG application that scans Confluence for instant answers from your internal documentation."
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
@@ -20,11 +20,13 @@ dependencies = [
     "pydantic>=2.11.5,<3.0.0",
     "pydantic-settings>=2.12.0,<3.0.0",
     "pymongo>=4.13.0,<5.0.0",
-    "pypandoc>=1.16",
+    "pymupdf>=1.26.6",
+    "pymupdf-layout>=1.26.6",
+    "pymupdf4llm>=0.2.2",
     "python-dotenv>=1.1.0,<2.0.0",
     "qdrant-client>=1.14.2,<2.0.0",
     "rich-click>=1.8.9,<2.0.0",
-    "sentence-transformers>=5.1.0,<6.0.0",
+    "sentence-transformers>=5.1.2",
 ]
 
 [dependency-groups]
@@ -110,6 +112,11 @@ markers = [
     "unit: Unit tests",
     "integration: Integration tests",
     "e2e: End-to-end tests"
+]
+filterwarnings = [
+    "ignore:builtin type SwigPyPacked:DeprecationWarning",
+    "ignore:builtin type SwigPyObject:DeprecationWarning",
+    "ignore:builtin type swigvarlink:DeprecationWarning",
 ]
 
 ### coverage ###

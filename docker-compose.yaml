@@ -36,7 +36,7 @@ services:
       - ./docker/mongo/mongosh.conf:/etc/mongosh.conf:ro
 
   qdrant:
-    image: qdrant/qdrant:v1.15.5
+    image: qdrant/qdrant:v1.16.0
     restart: always
     container_name: rebelist-revelations-qdrant
     ports:

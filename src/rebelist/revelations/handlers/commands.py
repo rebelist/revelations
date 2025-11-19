@@ -70,8 +70,8 @@ def data_initialize(context: Context, drop: bool) -> None:
         )
 
         click.secho('The application have been successfully initialized.', fg='white')
-    except Exception as e:
-        click.secho(f'Error initializing data: {e}', fg='red')
+    except Exception as error:
+        click.secho(f'Error initializing data: {error}', fg='red')
     finally:
         click.secho('Bye!', fg='white')
 
@@ -93,8 +93,8 @@ def data_fetcher(context: Context) -> None:
             f'Documents from the spaces "{", ".join(spaces)}" have been successfully pulled from the source.',
             fg='white',
         )
-    except Exception as e:
-        click.secho(f'Error fetching data: {e}', fg='red')
+    except Exception as error:
+        click.secho(f'Error fetching data: {error}', fg='red')
     finally:
         click.secho('Bye!', fg='white')
 
@@ -112,8 +112,8 @@ def data_vectorizer(context: Context) -> None:
             command()
 
         click.secho('Documents have been successfully vectorized.', fg='white')
-    except Exception as e:
-        click.secho(f'Error vectorizing data: {e}', fg='red')
+    except Exception as error:
+        click.secho(f'Error vectorizing data: {error}', fg='red')
     finally:
         click.secho('Bye!', fg='white')
 
@@ -154,7 +154,7 @@ def semantic_search(context: Context, evidence: bool) -> None:
         except KeyboardInterrupt:
             click.echo()
             break
-        except Exception as e:
-            click.secho(f'Error during semantic search: {e}', fg='red')
+        except Exception as error:
+            click.secho(f'Error during semantic search: {error}', fg='red')
 
     click.secho('Bye!', fg='white')
