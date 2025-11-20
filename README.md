@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-   <a href="https://github.com/rebelist/revelations/releases"><img src="https://img.shields.io/badge/Release-0.8.0--dev-e63946?logo=github&logoColor=white" alt="Release" /></a>
+   <a href="https://github.com/rebelist/revelations/releases"><img src="https://img.shields.io/badge/Release-0.8.1--dev-e63946?logo=github&logoColor=white" alt="Release" /></a>
    <a href="https://www.gnu.org/licenses/gpl-3.0.html"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3" /></a>
    <a href="https://github.com/rebelist/revelations/actions/workflows/tests.yaml"><img src="https://github.com/rebelist/revelations/actions/workflows/tests.yaml/badge.svg" alt="Tests" /></a>
    <a href="https://codecov.io/gh/rebelist/revelations" ><img src="https://codecov.io/gh/rebelist/revelations/graph/badge.svg?token=0FWI5KLNLH" alt="Codecov"/></a>

@@ -58,6 +58,8 @@ services:
     restart: unless-stopped
     environment:
       OLLAMA_MODELS: /root/.ollama
+      OLLAMA_FLASH_ATTENTION: 1
+      OLLAMA_KV_CACHE_TYPE: q8_0
     env_file:
       - .env.docker
     networks:

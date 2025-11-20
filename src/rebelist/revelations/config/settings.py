@@ -45,6 +45,10 @@ class ConfluenceSettings(BaseSettings):
     host: str = ''
     token: str = ''
     spaces: Annotated[tuple[str, ...], NoDecode] = ()
+    min_content_length: int = 50
+    max_workers: int = 3
+    batch_size: int = 500
+    throttle_delay_seconds: int = 0
 
     @field_validator('spaces', mode='before')
     @classmethod

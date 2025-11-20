@@ -1,10 +1,12 @@
+import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from itertools import batched
-from typing import Any, Final, Generator, TypeAlias, Union, cast
+from typing import Any, Generator, TypeAlias, Union, cast
 
 from atlassian import Confluence
 
+from rebelist.revelations.config.settings import ConfluenceSettings
 from rebelist.revelations.domain import ContentProviderPort
 from rebelist.revelations.domain.services import LoggerPort
 
@@ -15,18 +17,14 @@ Document: TypeAlias = dict[str, Any]
 class ConfluenceGateway(ContentProviderPort):
     """Confluence api gateway."""
 
-    MIN_CONTENT_LENGTH: Final[int] = 200
-    MAX_WORKERS: Final[int] = 5
-    BATCH_SIZE: Final[int] = 500
-
-    def __init__(self, client: Confluence, spaces: tuple[str, ...], logger: LoggerPort):
+    def __init__(self, client: Confluence, settings: ConfluenceSettings, logger: LoggerPort):
         self.__client = client
-        self.__spaces = spaces
+        self.__settings = settings
         self.__logger = logger
 
     def fetch(self) -> Generator[dict[str, Any], None, None]:
         """Finds content pages from confluence spaces."""
-        for space in self.__spaces:
+        for space in self.__settings.spaces:
             yield from self.__fetch_from_space(space)
 
     def __fetch_from_space(self, space: str) -> Generator[dict[str, Any], None, None]:
@@ -40,10 +38,10 @@ class ConfluenceGateway(ContentProviderPort):
             ),
         )
 
-        batches = batched(documents, ConfluenceGateway.BATCH_SIZE, strict=False)
+        batches = batched(documents, self.__settings.batch_size, strict=False)
 
         for batch in batches:
-            with ThreadPoolExecutor(max_workers=self.MAX_WORKERS) as executor:
+            with ThreadPoolExecutor(max_workers=self.__settings.max_workers) as executor:
                 results = executor.map(self.__process_page, batch)
 
                 for result in results:
@@ -59,10 +57,11 @@ class ConfluenceGateway(ContentProviderPort):
             body = document.get('body', {}).get('export_view', {})
             content = body.get('value', '')
 
-            if len(content) <= ConfluenceGateway.MIN_CONTENT_LENGTH:
+            if len(content) < self.__settings.min_content_length:
                 self.__logger.info(f'Skipping short document. [id={document.get("id")}]')
                 return None
 
+            time.sleep(self.__settings.throttle_delay_seconds)
             content_bytes = self.__client.get_page_as_pdf(document['id'])
 
             return {

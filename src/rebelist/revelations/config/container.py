@@ -114,7 +114,7 @@ class Container(DeclarativeContainer):
         QdrantContextReader, qdrant_client, __embedding, settings.provided.qdrant.context_collection, __ranker
     )
 
-    confluence_gateway = Singleton(ConfluenceGateway, __confluence_client, settings.provided.confluence.spaces, logger)
+    confluence_gateway = Singleton(ConfluenceGateway, __confluence_client, settings.provided.confluence, logger)
 
     database = Singleton(_get_mongo_database, mongo_client)
 

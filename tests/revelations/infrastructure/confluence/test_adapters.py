@@ -6,6 +6,7 @@ import pytest
 from atlassian import Confluence
 from pytest_mock import MockerFixture
 
+from rebelist.revelations.config.settings import ConfluenceSettings
 from rebelist.revelations.infrastructure.confluence.adapters import ConfluenceGateway
 
 
@@ -20,13 +21,7 @@ class TestConfluenceGateway:
                 'id': '123',
                 'title': 'Sample Page',
                 'body': {
-                    'export_view': {
-                        'value': """
-                        Purple elephants often walk slowly while drinking refreshing green tea.
-                        Purple elephants often walk slowly while drinking refreshing green tea.
-                        Purple elephants often walk slowly while drinking refreshing green tea.
-                        """
-                    }
+                    'export_view': {'value': 'Purple elephants often walk slowly while drinking refreshing green tea.'}
                 },
                 'history': {'lastUpdated': {'when': '2020-11-12T09:04:47.054+01:00'}},
                 '_links': {'tinyui': '/1'},
@@ -35,13 +30,7 @@ class TestConfluenceGateway:
                 'id': '456',
                 'title': 'Another Page',
                 'body': {
-                    'export_view': {
-                        'value': """
-                        Purple elephants often walk slowly while drinking refreshing green tea.
-                        Purple elephants often walk slowly while drinking refreshing green tea.
-                        Purple elephants often walk slowly while drinking refreshing green tea.
-                        """
-                    }
+                    'export_view': {'value': 'Purple lion often walk slowly while drinking refreshing green tea.'}
                 },
                 'history': {'lastUpdated': {'when': '2020-11-12T09:04:47.054+01:00'}},
                 '_links': {'tinyui': '/2'},
@@ -60,7 +49,8 @@ class TestConfluenceGateway:
     def test_fetch_yields_transformed_documents(self, mock_client: MagicMock, document_fixtures: list[dict[str, Any]]):
         """Test fetch documents."""
         mock_logger = MagicMock()
-        gateway = ConfluenceGateway(client=mock_client, spaces=('DOCS',), logger=mock_logger)
+        settings = ConfluenceSettings(spaces=('DOCS',), min_content_length=50, throttle_delay_seconds=0)
+        gateway = ConfluenceGateway(client=mock_client, settings=settings, logger=mock_logger)
         results = list(gateway.fetch())
 
         assert len(results) == len(document_fixtures)
@@ -83,19 +73,14 @@ class TestConfluenceGateway:
     def test_fetch_with_corrupted_document(self, mock_client: MagicMock):
         """Test fetch documents."""
         mock_logger = MagicMock()
-        gateway = ConfluenceGateway(client=mock_client, spaces=('DOCS',), logger=mock_logger)
+        settings = ConfluenceSettings(spaces=('DOCS',), min_content_length=50, throttle_delay_seconds=0)
+        gateway = ConfluenceGateway(client=mock_client, settings=settings, logger=mock_logger)
 
         documents = [
             {
                 'id': '123',
                 'body': {
-                    'export_view': {
-                        'value': """
-                        Purple elephants often walk slowly while drinking refreshing green tea.
-                        Purple elephants often walk slowly while drinking refreshing green tea.
-                        Purple elephants often walk slowly while drinking refreshing green tea.
-                        """
-                    }
+                    'export_view': {'value': 'Purple elephants often walk slowly while drinking refreshing green tea.'}
                 },
                 '_links': {'tinyui': '/1'},
             },
