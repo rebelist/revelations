@@ -14,7 +14,7 @@ services:
       - ./var/models:/home/revelations/app/var/models
 
   mongo:
-    image: mongo:8.0.15
+    image: mongo:8.0.16
     container_name: rebelist-revelations-mongo
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
@@ -36,7 +36,7 @@ services:
       - ./docker/mongo/mongosh.conf:/etc/mongosh.conf:ro
 
   qdrant:
-    image: qdrant/qdrant:v1.16.0
+    image: qdrant/qdrant:v1.16.1
     restart: always
     container_name: rebelist-revelations-qdrant
     ports:

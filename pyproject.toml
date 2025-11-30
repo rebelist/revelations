@@ -17,12 +17,12 @@ dependencies = [
     "langchainhub>=0.1.21,<1.0.0",
     "loguru>=0.7.3,<1.0.0",
     "prompt-toolkit>=3.0.52",
-    "pydantic>=2.11.5,<3.0.0",
+    "pydantic>=2.12.5,<3.0.0",
     "pydantic-settings>=2.12.0,<3.0.0",
     "pymongo>=4.13.0,<5.0.0",
     "pymupdf>=1.26.6,<2.0.0",
     "pymupdf-layout>=1.26.6",
-    "pymupdf4llm>=0.2.4,<1.0.0",
+    "pymupdf4llm>=0.2.5,<1.0.0",
     "python-dotenv>=1.1.0,<2.0.0",
     "qdrant-client>=1.16.1,<2.0.0",
     "rich-click>=1.8.9,<2.0.0",
@@ -36,7 +36,7 @@ dev = [
     "pytest>=9.0.0,<10.0.0",
     "pytest-cov>=7.0.0,<8.0.0",
     "pytest-mock>=3.15.0,<4.0.0",
-    "ruff>=0.14.4,<1.0.0",
+    "ruff>=0.14.7,<1.0.0",
     "types-mock>=5.2.0.20250809,<6.0.0"
 ]
 
