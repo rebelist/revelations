@@ -14,13 +14,13 @@ class DataEmbeddingUseCase:
 
     def __call__(self) -> None:
         """Executes the use case."""
-        try:
-            for document in self.__repository.find_all():
-                if len(document.content) > DataEmbeddingUseCase.CONTENT_LENGTH_LIMIT:
-                    self.__logger.warning(f'Skipping large document. [id="{document.id}" - title="{document.title}"]')
-                    continue
+        for document in self.__repository.find_all():
+            if len(document.content) > DataEmbeddingUseCase.CONTENT_LENGTH_LIMIT:
+                self.__logger.warning(f'Skipping large document. [id="{document.id}" - title="{document.title}"]')
+                continue
 
+            try:
                 self.__context_writer.add(document)
-        except Exception as error:
-            self.__logger.error(f'Saving to vector database has failed: {error}')
-            raise
+            except Exception as error:
+                self.__logger.error(f'Error saving document: {error} - [id="{document.id}" - title="{document.title}"]')
+                raise
