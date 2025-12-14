@@ -3,7 +3,6 @@ __pycache__/
 *.py[oc]
 build/
 dist/
-docker/chat
 wheels/
 *.egg-info
 
@@ -11,8 +10,9 @@ wheels/
 .venv
 
 # Project
-var
-data
+/var
+/data
+/docker/chat
 .env
 .env.docker
 .coverage

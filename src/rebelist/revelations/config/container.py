@@ -16,13 +16,17 @@ from sentence_transformers import CrossEncoder
 from transformers import AutoTokenizer
 from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 
-from rebelist.revelations.application.use_cases import DataFetchUseCase, DataVectorizeUseCase, SemanticSearchUseCase
+from rebelist.revelations.application.use_cases import DataEmbeddingUseCase, DataExtractionUseCase, InferenceUseCase
+from rebelist.revelations.application.use_cases.benchmark import BenchmarkUseCase
+from rebelist.revelations.config.prompts import benchmark_prompt_config, chat_prompt_config
 from rebelist.revelations.config.settings import RagSettings, load_settings
+from rebelist.revelations.domain import RetrievalEvaluator
 from rebelist.revelations.infrastructure.confluence import ConfluenceGateway
 from rebelist.revelations.infrastructure.logging import Logger
 from rebelist.revelations.infrastructure.mongo import MongoDocumentRepository
 from rebelist.revelations.infrastructure.mupdf.adapters import PdfConverter
-from rebelist.revelations.infrastructure.ollama import OllamaAdapter
+from rebelist.revelations.infrastructure.ollama import OllamaMemoryChatAdapter
+from rebelist.revelations.infrastructure.ollama.adapters import OllamaAnswerEvaluator, OllamaStatelessChatAdapter
 from rebelist.revelations.infrastructure.qdrant import QdrantContextReader, QdrantContextWriter
 
 
@@ -98,9 +102,15 @@ class Container(DeclarativeContainer):
         model=settings.provided.rag.llm_model,
         base_url=settings.provided.ollama.uri,
         request_timeout=60.0,  # Add connection pooling and timeout settings
-        temperature=0.1,  # Lower temperature for more consistent responses
+        temperature=0.2,  # Lower temperature for more consistent responses
     )
-    ollama_adapter = Singleton(OllamaAdapter, ollama_chat)
+    ollama_memory_chat_adapter = Singleton(OllamaMemoryChatAdapter, ollama_chat, chat_prompt_config)
+
+    ollama_stateless_chat_adapter = Singleton(OllamaStatelessChatAdapter, ollama_chat, chat_prompt_config)
+
+    retrieval_evaluator = Singleton(RetrievalEvaluator)
+
+    ollama_answer_evaluator = Singleton(OllamaAnswerEvaluator, ollama_chat, benchmark_prompt_config)
 
     context_writer = Singleton(
         QdrantContextWriter,
@@ -120,8 +130,19 @@ class Container(DeclarativeContainer):
 
     document_repository = Singleton(MongoDocumentRepository, database, settings.provided.mongo.source_collection)
 
-    data_fetch_use_case = Singleton(DataFetchUseCase, confluence_gateway, document_repository, __pdf_converter, logger)
+    data_extraction_use_case = Singleton(
+        DataExtractionUseCase, confluence_gateway, document_repository, __pdf_converter, logger
+    )
 
-    data_vectorize_use_case = Singleton(DataVectorizeUseCase, document_repository, context_writer, logger)
+    data_embedding_use_case = Singleton(DataEmbeddingUseCase, document_repository, context_writer, logger)
 
-    semantic_search_use_case = Singleton(SemanticSearchUseCase, context_reader, ollama_adapter, logger)
+    inference_use_case = Singleton(InferenceUseCase, context_reader, ollama_memory_chat_adapter, logger)
+
+    benchmark_use_case = Singleton(
+        BenchmarkUseCase,
+        retrieval_evaluator,
+        ollama_answer_evaluator,
+        context_reader,
+        ollama_stateless_chat_adapter,
+        logger,
+    )

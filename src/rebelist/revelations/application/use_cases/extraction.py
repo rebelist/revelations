@@ -2,7 +2,7 @@ from rebelist.revelations.domain import ContentProviderPort, Document, DocumentR
 from rebelist.revelations.domain.services import LoggerPort, PdfConverterPort
 
 
-class DataFetchUseCase:
+class DataExtractionUseCase:
     def __init__(
         self,
         content_provider: ContentProviderPort,

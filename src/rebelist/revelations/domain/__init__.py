@@ -1,10 +1,21 @@
-from rebelist.revelations.domain.models import ContextDocument, Document, Response
+from rebelist.revelations.domain.models import (
+    BenchmarkCase,
+    BenchmarkScore,
+    ContextDocument,
+    Document,
+    FidelityScore,
+    PromptConfig,
+    Response,
+)
 from rebelist.revelations.domain.repositories import DocumentRepositoryPort
 from rebelist.revelations.domain.services import (
+    AnswerEvaluatorPort,
+    ChatAdapterPort,
     ContentProviderPort,
     ContextReaderPort,
     ContextWriterPort,
-    ResponseGeneratorPort,
+    LoggerPort,
+    RetrievalEvaluator,
 )
 
 __all__ = [
@@ -15,5 +26,12 @@ __all__ = [
     'ContentProviderPort',
     'ContextWriterPort',
     'ContextReaderPort',
-    'ResponseGeneratorPort',
+    'ChatAdapterPort',
+    'RetrievalEvaluator',
+    'AnswerEvaluatorPort',
+    'FidelityScore',
+    'BenchmarkScore',
+    'BenchmarkCase',
+    'LoggerPort',
+    'PromptConfig',
 ]

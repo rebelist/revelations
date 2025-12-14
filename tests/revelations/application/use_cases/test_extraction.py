@@ -5,12 +5,12 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from rebelist.revelations.application.use_cases.data_fetcher import DataFetchUseCase
+from rebelist.revelations.application.use_cases.extraction import DataExtractionUseCase
 from rebelist.revelations.domain import ContentProviderPort, Document, DocumentRepositoryPort
 from rebelist.revelations.domain.services import LoggerPort, PdfConverterPort
 
 
-class TestDataFetchUseCase:
+class TestDataExtractionUseCase:
     @pytest.fixture
     def document_fixture(self) -> dict[str, Any]:
         """Create a document fixture."""
@@ -33,7 +33,7 @@ class TestDataFetchUseCase:
         mock_provider.fetch.return_value = [document_fixture]
         pdf_converter.pdf_to_markdown.return_value = '# This is a title'
 
-        use_case = DataFetchUseCase(
+        use_case = DataExtractionUseCase(
             content_provider=mock_provider,
             repository=mock_repository,
             converter=pdf_converter,
@@ -75,7 +75,7 @@ class TestDataFetchUseCase:
         pdf_converter = mocker.create_autospec(PdfConverterPort)
         mock_logger = mocker.create_autospec(LoggerPort)
         mock_provider.fetch.side_effect = Exception('Provider error')
-        use_case = DataFetchUseCase(
+        use_case = DataExtractionUseCase(
             content_provider=mock_provider, repository=mock_repository, converter=pdf_converter, logger=mock_logger
         )
         with pytest.raises(Exception, match='Provider error'):

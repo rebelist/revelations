@@ -1,5 +1,5 @@
-from rebelist.revelations.application.use_cases.data_fetcher import DataFetchUseCase
-from rebelist.revelations.application.use_cases.data_vectorizer import DataVectorizeUseCase
-from rebelist.revelations.application.use_cases.semantic_search import SemanticSearchUseCase
+from rebelist.revelations.application.use_cases.embedding import DataEmbeddingUseCase
+from rebelist.revelations.application.use_cases.extraction import DataExtractionUseCase
+from rebelist.revelations.application.use_cases.inference import InferenceUseCase
 
-__all__ = ['DataFetchUseCase', 'DataVectorizeUseCase', 'SemanticSearchUseCase']
+__all__ = ['DataExtractionUseCase', 'DataEmbeddingUseCase', 'InferenceUseCase']

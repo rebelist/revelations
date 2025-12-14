@@ -1,4 +1,5 @@
-from typing import Any, Mapping
+from pathlib import Path
+from typing import Any, Mapping, cast
 
 import rich_click as click
 from click import Context, style
@@ -10,13 +11,19 @@ from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
 from qdrant_client.models import HnswConfigDiff, OptimizersConfigDiff
 from rich.console import Console
+from rich.live import Live
 from rich.markdown import Markdown
+from rich.table import Table
+
+from rebelist.revelations.domain import BenchmarkScore
+from rebelist.revelations.handlers.console import Number
+from rebelist.revelations.infrastructure.filesystem import BenchmarkLoader
 
 
-@click.command(name='store:initialize')
+@click.command(name='dataset:initialize')
 @click.option('--drop', is_flag=True, help='Drop databases if exists.')
 @click.pass_context
-def data_initialize(context: Context, drop: bool) -> None:
+def dataset_initialize(context: Context, drop: bool) -> None:
     """Initializes the application."""
     try:
         container = context.obj
@@ -72,22 +79,23 @@ def data_initialize(context: Context, drop: bool) -> None:
         click.secho('The application have been successfully initialized.', fg='white')
     except Exception as error:
         click.secho(f'Error initializing data: {error}', fg='red')
+        return
     finally:
         click.secho('Bye!', fg='white')
 
 
-@click.command(name='data:fetch')
+@click.command(name='dataset:download')
 @click.pass_context
-def data_fetcher(context: Context) -> None:
-    """Retrieves and stores documents into the port."""
+def dataset_download(context: Context) -> None:
+    """Retrieves and stores documents into the database."""
     try:
         container = context.obj
-        command = container.data_fetch_use_case()
+        data_extraction_use_case = container.data_extraction_use_case()
         spaces = container.settings().confluence.spaces
         console = Console()
 
         with console.status('[bold yellow]Pulling data from the source...[/bold yellow]', spinner='dots'):
-            command()
+            data_extraction_use_case()
 
         click.secho(
             f'Documents from the spaces "{", ".join(spaces)}" have been successfully pulled from the source.',
@@ -95,36 +103,38 @@ def data_fetcher(context: Context) -> None:
         )
     except Exception as error:
         click.secho(f'Error fetching data: {error}', fg='red')
+        return
     finally:
         click.secho('Bye!', fg='white')
 
 
-@click.command(name='data:vectorize')
+@click.command(name='dataset:index')
 @click.pass_context
-def data_vectorizer(context: Context) -> None:
+def dataset_index(context: Context) -> None:
     """Index and structure documents for RAG context retrieval."""
     try:
         container = context.obj
-        command = container.data_vectorize_use_case()
+        data_embedding_use_case = container.data_embedding_use_case()
         console = Console()
 
-        with console.status('[bold yellow]Vectorizing documents...[/bold yellow]', spinner='dots'):
-            command()
+        with console.status('[bold yellow]Saving documents to Qdrant...[/bold yellow]', spinner='dots'):
+            data_embedding_use_case()
 
-        click.secho('Documents have been successfully vectorized.', fg='white')
+        click.secho('Documents have been successfully saved to qdrant.', fg='white')
     except Exception as error:
-        click.secho(f'Error vectorizing data: {error}', fg='red')
+        click.secho(f'Error saving data to qdrant: {error}', fg='red')
+        return
     finally:
         click.secho('Bye!', fg='white')
 
 
-@click.command(name='chat:run')
+@click.command(name='chat')
 @click.option('--evidence', is_flag=True, help='Shows evidence information from the documentation on every answer.')
 @click.pass_context
-def semantic_search(context: Context, evidence: bool) -> None:
+def chat(context: Context, evidence: bool) -> None:
     """Interactive Q&A RAG to answer questions based on documentation."""
     container = context.obj
-    command = container.semantic_search_use_case()
+    inference_use_case = container.inference_use_case()
     click.secho('Welcome to Revelations! Ask questions about the documentation or type "exit" to quit.', fg='white')
     console = Console(highlight=False)
 
@@ -140,10 +150,13 @@ def semantic_search(context: Context, evidence: bool) -> None:
             if not question:
                 continue
 
-            response = command(question)
+            response = inference_use_case(question)
+            answer_buffer = '\n' + style('🤖 ECHO: ', bold=True, fg='yellow')
 
-            click.echo(style('\n🤖 ECHO: ', bold=True, fg='yellow'))
-            console.print(Markdown(response.answer.strip(), justify='left'))
+            with Live(console=console, screen=False, refresh_per_second=10) as live:
+                for chunk in response.answer:
+                    answer_buffer += chunk
+                    live.update(Markdown(answer_buffer.strip()))
 
             if evidence:
                 for index, document in enumerate(response.documents):
@@ -156,5 +169,72 @@ def semantic_search(context: Context, evidence: bool) -> None:
             break
         except Exception as error:
             click.secho(f'Error during semantic search: {error}', fg='red')
+            return
 
     click.secho('Bye!', fg='white')
+
+
+@click.command(name='benchmark')
+@click.option(
+    '--dataset',
+    required=True,
+    type=click.Path(
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        path_type=Path,
+    ),
+    help='Path to the dataset used for retrieval and evaluation.',
+)
+@click.option(
+    '--cutoff',
+    default=5,
+    type=int,
+    show_default=True,
+    help='The number of top documents (K) to retrieve and use for metric calculation.',
+)
+@click.option(
+    '--limit',
+    default=15,
+    type=int,
+    show_default=True,
+    help='Number of documents to retrieve from the database.',
+)
+@click.pass_context
+def benchmark(context: Context, dataset: Path, cutoff: int, limit: int) -> None:
+    """Benchmarks the full retrieval flow to measure how well the current RAG setup performs."""
+    console = Console()
+    container = context.obj
+
+    try:
+        with console.status('[bold yellow]Running benchmark...[/bold yellow]', spinner='dots'):
+            benchmark_use_case = container.benchmark_use_case()
+            loader = BenchmarkLoader(dataset)
+            benchmark_cases = list(loader.load())
+            benchmark_score = cast(BenchmarkScore, benchmark_use_case(benchmark_cases, cutoff, limit))
+    except Exception as error:
+        click.secho(f'Error running benchmark: {error}', fg='red')
+        return
+
+    retrieval = benchmark_score.retrieval
+    fidelity = benchmark_score.fidelity
+
+    table_restrieval = Table(title='\nRetrieval performance metrics', width=50)
+    table_restrieval.add_column('Metric', justify='left', style='grey70', no_wrap=True)
+    table_restrieval.add_column('Score', justify='right')
+    table_restrieval.add_row('Mean Reciprocal Rank', Number.prettify(retrieval.mrr, Number.Scale.ZERO_ONE))
+    table_restrieval.add_row(
+        'Normalized Discounted Cumulative Gain', Number.prettify(retrieval.ndcg, Number.Scale.ZERO_ONE)
+    )
+    table_restrieval.add_row('Keyword Coverage', Number.prettify(retrieval.keyword_coverage, Number.Scale.PERCENT))
+    table_restrieval.add_row('Saturation@K', Number.prettify(retrieval.saturation_at_k, Number.Scale.ZERO_ONE))
+
+    table_fidelity = Table(title='\nAnswer quality metrics', width=50)
+    table_fidelity.add_column('Metric', justify='left', style='grey70', no_wrap=True)
+    table_fidelity.add_column('Score', justify='right')
+    table_fidelity.add_row('Accuracy', Number.prettify(fidelity.accuracy, Number.Scale.ONE_FIVE))
+    table_fidelity.add_row('Completeness', Number.prettify(fidelity.completeness, Number.Scale.ONE_FIVE))
+    table_fidelity.add_row('Relevance', Number.prettify(fidelity.relevance, Number.Scale.ONE_FIVE))
+
+    console.print(table_restrieval)
+    console.print(table_fidelity)

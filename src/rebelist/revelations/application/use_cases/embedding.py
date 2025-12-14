@@ -4,7 +4,7 @@ from rebelist.revelations.domain import ContextWriterPort, DocumentRepositoryPor
 from rebelist.revelations.domain.services import LoggerPort
 
 
-class DataVectorizeUseCase:
+class DataEmbeddingUseCase:
     CONTENT_LENGTH_LIMIT: Final[int] = 500_000
 
     def __init__(self, repository: DocumentRepositoryPort, context_writer: ContextWriterPort, logger: LoggerPort):
@@ -13,10 +13,10 @@ class DataVectorizeUseCase:
         self.__logger = logger
 
     def __call__(self) -> None:
-        """Executes the command."""
+        """Executes the use case."""
         try:
             for document in self.__repository.find_all():
-                if len(document.content) > DataVectorizeUseCase.CONTENT_LENGTH_LIMIT:
+                if len(document.content) > DataEmbeddingUseCase.CONTENT_LENGTH_LIMIT:
                     self.__logger.warning(f'Skipping large document. [id="{document.id}" - title="{document.title}"]')
                     continue
 

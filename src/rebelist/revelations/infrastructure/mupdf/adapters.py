@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 import fitz
 import pymupdf4llm
 
@@ -12,8 +14,20 @@ class PdfConverter(PdfConverterPort):
         """Converts the raw binary content of a PDF document into a standardized Markdown formatted string."""
         try:
             with fitz.open('pdf', data) as document:
-                return pymupdf4llm.to_markdown(
-                    document, ignore_graphics=True, ignore_images=False, page_separators=False
-                ).strip()
+                markdown = cast(
+                    str | list[Any],
+                    pymupdf4llm.to_markdown(
+                        document,
+                        ignore_graphics=True,
+                        ignore_images=False,
+                        page_separators=False,
+                    ),
+                )
+
+                if not isinstance(markdown, str):
+                    raise DocumentConverterError(f'Expected markdown string, got {type(markdown)}')
+
+                return markdown.strip()
+
         except Exception as error:
             raise DocumentConverterError(f'Failed to convert PDF to Markdown: {error}') from error

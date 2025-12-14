@@ -11,7 +11,7 @@ start:
 	@docker-compose --profile prod up -d
 	@docker-compose --profile prod exec -t ollama sh -c 'ollama pull "$$RAG_LLM_MODEL"'
 	@docker-compose --profile prod exec -t ollama sh -c 'ollama pull "$$RAG_EMBEDDING_MODEL"'
-	@bin/console store:initialize
+	@bin/console dataset:initialize
 
 dev:
 	@echo "\nStarting Revelations for development..."
@@ -22,7 +22,7 @@ dev:
 	@set -a && . ./.env && set +a && \
     ollama pull $$RAG_LLM_MODEL && \
     ollama pull $$RAG_EMBEDDING_MODEL
-	@revelations store:initialize
+	@revelations dataset:initialize
 
 shutdown:
 	@echo "\nShutting down Revelations..."

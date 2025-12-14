@@ -4,7 +4,13 @@ import rich_click as click
 from rich_click import Command, Context
 
 from rebelist.revelations.config.container import Container
-from rebelist.revelations.handlers.commands import data_fetcher, data_initialize, data_vectorizer, semantic_search
+from rebelist.revelations.handlers.commands import (
+    benchmark,
+    chat,
+    dataset_download,
+    dataset_index,
+    dataset_initialize,
+)
 
 container = Container.create()
 settings = container.settings()
@@ -18,12 +24,8 @@ def console(context: Context) -> None:
     context.obj = container
 
 
-data_fetcher: Command = cast(Command, data_fetcher)
-data_vectorizer: Command = cast(Command, data_vectorizer)
-data_initialize: Command = cast(Command, data_initialize)
-semantic_search: Command = cast(Command, semantic_search)
-
-console.add_command(data_initialize)
-console.add_command(data_fetcher)
-console.add_command(data_vectorizer)
-console.add_command(semantic_search)
+console.add_command(cast(Command, dataset_initialize))
+console.add_command(cast(Command, dataset_download))
+console.add_command(cast(Command, dataset_index))
+console.add_command(cast(Command, chat))
+console.add_command(cast(Command, benchmark))

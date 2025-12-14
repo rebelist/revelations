@@ -1,141 +1,122 @@
 from datetime import datetime
-from typing import Any, Iterable
 
 import pytest
-from pytest_mock import MockerFixture
 
-from rebelist.revelations.domain import ContextDocument, Document, Response
-from rebelist.revelations.domain.services import (
-    ContentProviderPort,
-    ContextReaderPort,
-    ContextWriterPort,
-    ResponseGeneratorPort,
-)
+from rebelist.revelations.domain import BenchmarkCase
+from rebelist.revelations.domain.models import ContextDocument, RetrievalScore
+from rebelist.revelations.domain.services import RetrievalEvaluator
 
 
-class TestContentProviderPort:
-    def test_fetch_abstract_method(self) -> None:
-        """Tests that the fetch abstract method correctly returns an iterable of content dictionaries."""
+class TestRetrievalEvaluator:
+    """Test suite for the RetrievalEvaluator domain service."""
 
-        class MockContentProvider(ContentProviderPort):
-            def fetch(self) -> Iterable[dict[str, Any]]:
-                return [{'id': 1, 'title': 'Test'}]
-
-        provider = MockContentProvider()
-        result = list(provider.fetch())
-
-        assert len(result) == 1
-        assert result[0]['id'] == 1
-        assert result[0]['title'] == 'Test'
-
-    def test_fetch_empty_result(self) -> None:
-        """Tests that the fetch method can return an empty iterable."""
-
-        class MockContentProvider(ContentProviderPort):
-            def fetch(self) -> Iterable[dict[str, Any]]:
-                return []
-
-        provider = MockContentProvider()
-        result = list(provider.fetch())
-
-        assert len(result) == 0
-
-
-class TestContextWriterPort:
     @pytest.fixture
-    def mock_document(self) -> Document:
-        """Creates a sample Document instance for testing with basic test data."""
-        return Document(
-            id=1,
-            title='Test Document',
-            content='Test Content',
-            modified_at=datetime.now(),
-            raw='Raw Content',
-            url='https://example.com',
+    def evaluator(self) -> RetrievalEvaluator:
+        """Provide a retrieval evaluator instance."""
+        return RetrievalEvaluator()
+
+    @pytest.fixture
+    def documents(self) -> list[ContextDocument]:
+        """Create a ranked list of context documents."""
+        modified_at = datetime(2024, 1, 1, 12, 0, 0)
+        return [
+            ContextDocument(title='Doc 1', content='Python and AI', modified_at=modified_at),
+            ContextDocument(title='Doc 2', content='Machine learning basics', modified_at=modified_at),
+            ContextDocument(title='Doc 3', content='Advanced Python topics', modified_at=modified_at),
+            ContextDocument(title='Doc 4', content='Unrelated content', modified_at=modified_at),
+        ]
+
+    @pytest.fixture
+    def benchmark_case(self) -> BenchmarkCase:
+        """Create a benchmark case with keywords and an expected answer."""
+        return BenchmarkCase(
+            question='What is Python used for?',
+            answer='Python is used for many things.',
+            keywords={'python', 'ai'},
         )
 
-    def test_add_abstract_method(self, mock_document: Document) -> None:
-        """Test add method."""
+    def test_evaluate_returns_expected_retrieval_score(
+        self,
+        evaluator: RetrievalEvaluator,
+        benchmark_case: BenchmarkCase,
+        documents: list[ContextDocument],
+    ) -> None:
+        """Tests that retrieval metrics are computed correctly for a typical case."""
+        result = evaluator.evaluate(benchmark_case, documents, k=3)
 
-        class MockContextWriter(ContextWriterPort):
-            def add(self, document: Document) -> None:
-                pass
+        assert isinstance(result, RetrievalScore)
 
-        writer = MockContextWriter()
-        writer.add(mock_document)  # Should not raise any exception
+        # MRR:
+        # - "python" appears at rank 1
+        # - "AI" appears at rank 1
+        assert result.mrr == pytest.approx(1.0)
 
+        # nDCG should be positive and bounded
+        assert 0.0 < result.ndcg <= 1.0
 
-class TestContextReaderPort:
-    @pytest.fixture
-    def mock_context_document(self) -> ContextDocument:
-        """Creates a sample ContextDocument instance for testing with basic test data."""
-        return ContextDocument(title='Test Context', content='Test Content', modified_at=datetime.now())
+        # Both keywords appear in top-k → 100%
+        assert result.keyword_coverage == 100.0
 
-    def test_search_abstract_method(self, mocker: MockerFixture, mock_context_document: ContextDocument) -> None:
-        """Tests that the search abstract method correctly returns an iterable of context documents."""
-        reader = mocker.create_autospec(spec=ContextReaderPort)
-        reader.search.return_value = [mock_context_document]
-        result = list(reader.search('test', 1))
+        # Saturation:
+        # - python: 2 relevant total, 1 in top-k
+        # - AI: 1 relevant total, 1 in top-k
+        # avg = (1/2 + 1/1) / 2 = 0.75
+        assert result.saturation_at_k == pytest.approx(1.0)
 
-        assert len(result) == 1
-        assert result[0].title == mock_context_document.title
-        assert result[0].content == mock_context_document.content
+    def test_evaluate_returns_zero_scores_when_no_keywords_match(
+        self,
+        evaluator: RetrievalEvaluator,
+        documents: list[ContextDocument],
+    ) -> None:
+        """Tests that all metrics are zero when no keywords appear in documents."""
+        benchmark_case = BenchmarkCase(
+            question='What is Rust?',
+            answer='Rust is a systems programming language.',
+            keywords={'rust'},
+        )
 
-    def test_search_with_limit(self, mocker: MockerFixture, mock_context_document: ContextDocument) -> None:
-        """Tests that the search method respects the limit parameter."""
-        reader = mocker.create_autospec(spec=ContextReaderPort)
-        reader.search.return_value = [mock_context_document]
+        result = evaluator.evaluate(benchmark_case, documents, k=3)
 
-        result = list(reader.search('test', 1))
+        assert result.mrr == 0.0
+        assert result.ndcg == 0.0
+        assert result.keyword_coverage == 0.0
+        assert result.saturation_at_k == 0.0
 
-        assert len(result) == 1
-        assert result[0].title == mock_context_document.title
+    def test_evaluate_penalizes_late_relevant_documents(
+        self,
+        evaluator: RetrievalEvaluator,
+    ) -> None:
+        """Tests that ranking quality is penalized when relevant documents appear late."""
+        modified_at = datetime(2024, 1, 1, 12, 0, 0)
+        documents = [
+            ContextDocument(title='Doc 1', content='irrelevant', modified_at=modified_at),
+            ContextDocument(title='Doc 2', content='irrelevant', modified_at=modified_at),
+            ContextDocument(title='Doc 3', content='keyword', modified_at=modified_at),
+        ]
 
+        benchmark_case = BenchmarkCase(
+            question='Test question',
+            answer='Expected answer.',
+            keywords={'keyword'},
+        )
 
-class TestResponseGeneratorPort:
-    @pytest.fixture
-    def mock_context_document(self) -> ContextDocument:
-        """Creates a sample ContextDocument instance for testing with basic test data."""
-        return ContextDocument(title='Test Context', content='Test Content', modified_at=datetime.now())
+        result = evaluator.evaluate(benchmark_case, documents, k=3)
 
-    def test_respond_abstract_method(self, mock_context_document: ContextDocument) -> None:
-        """Tests that the "respond" abstract method correctly generates a response with answer and documents."""
+        # First relevant document at rank 3 → MRR = 1/3
+        assert result.mrr == pytest.approx(1 / 3)
 
-        class MockResponseGenerator(ResponseGeneratorPort):
-            def respond(self, question: str, documents: Iterable[ContextDocument]) -> Response:
-                return Response(answer='Test Answer', documents=[mock_context_document])
+        # nDCG should be < 1 due to suboptimal ranking
+        assert 0.0 < result.ndcg < 1.0
 
-        generator = MockResponseGenerator()
-        result = generator.respond('test question', [mock_context_document])
+        # Keyword is present → coverage 100%
+        assert result.keyword_coverage == 100.0
 
-        assert result.answer == 'Test Answer'
-        assert len(list(result.documents)) == 1
-        assert list(result.documents)[0].title == mock_context_document.title
-
-    def test_get_prompt(self) -> None:
-        """Tests that the get_prompt method returns a properly formatted prompt template."""
-
-        class MockResponseGenerator(ResponseGeneratorPort):
-            def respond(self, question: str, documents: Iterable[ContextDocument]) -> Response:
-                return Response(answer='', documents=[])
-
-        generator = MockResponseGenerator()
-        system_prompt = generator.get_system_template()
-        user_prompt = generator.get_human_template()
-
-        assert 'You are a helpful senior colleague' in system_prompt
-        assert '{context}' in user_prompt
-        assert '{question}' in user_prompt
-
-    def test_respond_with_empty_documents(self) -> None:
-        """Tests that the "respond" method can handle empty document lists."""
-
-        class MockResponseGenerator(ResponseGeneratorPort):
-            def respond(self, question: str, documents: Iterable[ContextDocument]) -> Response:
-                return Response(answer='No documents found.', documents=[])
-
-        generator = MockResponseGenerator()
-        result = generator.respond('test question', [])
-
-        assert result.answer == 'No documents found.'
-        assert len(list(result.documents)) == 0
+    def test_evaluate_raises_when_k_is_not_positive(
+        self,
+        evaluator: RetrievalEvaluator,
+        benchmark_case: BenchmarkCase,
+        documents: list[ContextDocument],
+    ) -> None:
+        """Tests that a ValueError is raised when k is not a positive integer."""
+        with pytest.raises(ValueError, match='k must be a positive integer'):
+            evaluator.evaluate(benchmark_case, documents, k=0)

@@ -5,13 +5,13 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from rebelist.revelations.application.use_cases.data_vectorizer import DataVectorizeUseCase
+from rebelist.revelations.application.use_cases.embedding import DataEmbeddingUseCase
 from rebelist.revelations.domain import ContextWriterPort, Document, DocumentRepositoryPort
 from rebelist.revelations.domain.services import LoggerPort
 from rebelist.revelations.infrastructure.mongo import MongoDocumentRepository
 
 
-class TestDataVectorizeUseCase:
+class TestDataEmbeddingUseCase:
     @pytest.fixture
     def document_fixtures(self) -> list[Document]:
         """Create document fixtures."""
@@ -43,7 +43,7 @@ class TestDataVectorizeUseCase:
         mock_logger = mocker.create_autospec(LoggerPort)
         mock_repository.find_all.return_value = document_fixtures
 
-        use_case = DataVectorizeUseCase(repository=mock_repository, context_writer=mock_writer, logger=mock_logger)
+        use_case = DataEmbeddingUseCase(repository=mock_repository, context_writer=mock_writer, logger=mock_logger)
 
         return {
             'use_case': use_case,
@@ -73,7 +73,7 @@ class TestDataVectorizeUseCase:
         mock_writer = mocker.create_autospec(ContextWriterPort, instance=True)
         mock_logger = mocker.create_autospec(LoggerPort)
         mock_repository.find_all.side_effect = Exception('Repository error')
-        use_case = DataVectorizeUseCase(repository=mock_repository, context_writer=mock_writer, logger=mock_logger)
+        use_case = DataEmbeddingUseCase(repository=mock_repository, context_writer=mock_writer, logger=mock_logger)
         with pytest.raises(Exception, match='Repository error'):
             use_case()
 
@@ -84,6 +84,6 @@ class TestDataVectorizeUseCase:
         mock_logger = mocker.create_autospec(LoggerPort)
         mock_repository.find_all.return_value = document_fixtures
         mock_writer.add.side_effect = Exception('Writer error')
-        use_case = DataVectorizeUseCase(repository=mock_repository, context_writer=mock_writer, logger=mock_logger)
+        use_case = DataEmbeddingUseCase(repository=mock_repository, context_writer=mock_writer, logger=mock_logger)
         with pytest.raises(Exception, match='Writer error'):
             use_case()

@@ -1,3 +1,3 @@
-from rebelist.revelations.infrastructure.ollama.adapters import OllamaAdapter
+from rebelist.revelations.infrastructure.ollama.adapters import OllamaMemoryChatAdapter
 
-__all__ = ['OllamaAdapter']
+__all__ = ['OllamaMemoryChatAdapter']
