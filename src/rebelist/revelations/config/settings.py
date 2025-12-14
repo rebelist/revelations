@@ -35,6 +35,8 @@ class RagSettings(BaseSettings):
     tokenizer_model_path: str = ''
     ranker_model: str = ''
     ranker_model_path: str = ''
+    context_cutoff: int = 5
+    retrieval_limit: int = 20
 
 
 class ConfluenceSettings(BaseSettings):

@@ -135,7 +135,9 @@ class Container(DeclarativeContainer):
 
     data_embedding_use_case = Singleton(DataEmbeddingUseCase, document_repository, context_writer, logger)
 
-    inference_use_case = Singleton(InferenceUseCase, context_reader, ollama_memory_chat_adapter, logger)
+    inference_use_case = Singleton(
+        InferenceUseCase, context_reader, ollama_memory_chat_adapter, settings.provided.rag, logger
+    )
 
     benchmark_use_case = Singleton(
         BenchmarkUseCase,
