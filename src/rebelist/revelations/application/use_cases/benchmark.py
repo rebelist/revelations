@@ -33,7 +33,7 @@ class BenchmarkUseCase:
         self.__logger = logger
 
     def __call__(self, benchmark_cases: list[BenchmarkCase], cutoff: int, limit: int) -> BenchmarkScore:
-        """Executes the command."""
+        """Executes the use case."""
         if cutoff > BenchmarkUseCase.CUTOFF_MAX:
             raise ValueError(f'Cutoff value must be ≤ {BenchmarkUseCase.CUTOFF_MAX}, got {cutoff}')
 
