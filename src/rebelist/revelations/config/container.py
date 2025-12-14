@@ -77,7 +77,6 @@ class Container(DeclarativeContainer):
         OllamaEmbeddings,
         model=settings.provided.rag.embedding_model,
         base_url=settings.provided.ollama.uri,
-        num_ctx=settings.provided.rag.chunk_size,
     )
 
     __document_splitter = Singleton(_get_text_splitter, settings.provided.rag)

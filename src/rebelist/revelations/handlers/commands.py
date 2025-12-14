@@ -123,7 +123,7 @@ def dataset_index(context: Context) -> None:
         click.secho('Documents have been successfully saved to qdrant.', fg='white')
     except Exception as error:
         click.secho(f'Error saving data to qdrant: {error}', fg='red')
-        return
+        raise
     finally:
         click.secho('Bye!', fg='white')
 

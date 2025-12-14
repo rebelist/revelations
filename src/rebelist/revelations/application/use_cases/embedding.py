@@ -22,5 +22,5 @@ class DataEmbeddingUseCase:
 
                 self.__context_writer.add(document)
         except Exception as error:
-            self.__logger.error(f'Vectorization has failed: {error}')
+            self.__logger.error(f'Saving to vector database has failed: {error}')
             raise
