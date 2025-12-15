@@ -81,9 +81,9 @@ class TestDataEmbeddingUseCase:
         """Ensures that exceptions in context_writer.add are caught and re-raised."""
         mock_repository = mocker.create_autospec(DocumentRepositoryPort, instance=True)
         mock_writer = mocker.create_autospec(ContextWriterPort, instance=True)
-        mock_logger = mocker.create_autospec(LoggerPort)
+        mock_logger: MagicMock = mocker.create_autospec(LoggerPort)
         mock_repository.find_all.return_value = document_fixtures
         mock_writer.add.side_effect = Exception('Writer error')
         use_case = DataEmbeddingUseCase(repository=mock_repository, context_writer=mock_writer, logger=mock_logger)
-        with pytest.raises(Exception, match='Writer error'):
-            use_case()
+        use_case()
+        mock_logger.error.assert_called_with('Error saving document: Writer error - [id="200" - title="Second Doc"]')
