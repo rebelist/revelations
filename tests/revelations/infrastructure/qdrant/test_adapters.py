@@ -84,15 +84,12 @@ class TestQdrantContextReader:
         mock_ranker.predict.return_value = [0.6, 0.9]
 
         qdrant_docs = [
-            (
-                Mock(content=doc.content, metadata={'title': doc.title, 'modified_at': doc.modified_at.isoformat()}),
-                0.9,
-            )
+            Mock(content=doc.content, metadata={'title': doc.title, 'modified_at': doc.modified_at.isoformat()})
             for doc in sample_context_documents
         ]
 
         store_mock = Mock()
-        store_mock.similarity_search_with_score.return_value = qdrant_docs
+        store_mock.similarity_search.return_value = qdrant_docs
         mock_vector_store.return_value = store_mock
 
         reader = QdrantContextReader(
@@ -103,7 +100,7 @@ class TestQdrantContextReader:
 
         assert len(results) == 2
         assert isinstance(results[0], ContextDocument)
-        assert store_mock.similarity_search_with_score.call_count == 1
+        assert store_mock.similarity_search.call_count == 1
         assert mock_ranker.predict.call_count == 1
 
     @patch('rebelist.revelations.infrastructure.qdrant.adapters.QdrantVectorStore')

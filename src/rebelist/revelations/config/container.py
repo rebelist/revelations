@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import Any, Final, Mapping, cast
 
@@ -50,6 +51,7 @@ class Container(DeclarativeContainer):
     @staticmethod
     def _get_text_splitter(settings: RagSettings) -> TextSplitter:
         tokenizer = cast(PreTrainedTokenizerFast, AutoTokenizer.from_pretrained(settings.tokenizer_model_path))
+        tokenizer.model_max_length = sys.maxsize
         return MarkdownTextSplitter.from_huggingface_tokenizer(
             tokenizer=tokenizer,
             chunk_size=settings.chunk_size,

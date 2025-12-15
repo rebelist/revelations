@@ -53,12 +53,10 @@ class QdrantContextReader(ContextReaderPort):
     def search(self, query: str, limit: int) -> list[ContextDocument]:
         """Searches for context documents based on a query embedding."""
         search_params = SearchParams(hnsw_ef=QdrantContextReader.SEARCH_EFFORT, exact=False)
-        items = self.__store.similarity_search_with_score(query, k=limit, search_params=search_params)
+        items = self.__store.similarity_search(query, k=limit, search_params=search_params)
         documents: list[ContextDocument] = []
 
-        for item, score in items:
-            if score < 0.5:
-                continue
+        for item in items:
             title = cast(str, item.metadata.get('title', ''))
             url = cast(str, item.metadata.get('url', None))
             modified_at = datetime.fromisoformat(cast(str, item.metadata.get('modified_at')))

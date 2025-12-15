@@ -54,7 +54,7 @@ def dataset_initialize(context: Context, drop: bool) -> None:
 
             # the minimum number of unindexed vectors a collection segment must accumulate before Qdrant's optimizer
             # will start the HNSW index building process.
-            optimizers_config = OptimizersConfigDiff(indexing_threshold=1000)
+            optimizers_config = OptimizersConfigDiff(indexing_threshold=200)
             vector_params = VectorParams(
                 size=settings.rag.embedding_dimension,
                 distance=Distance.COSINE,
