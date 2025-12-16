@@ -196,7 +196,7 @@ class TestBenchmarkUseCase:
             mock_logger,
         )
 
-        with pytest.raises(RuntimeError):
+        with pytest.raises(ValueError, match='No retrieval scores were provided.'):
             use_case(benchmark_cases, cutoff=10, limit=20)
 
-        cast(MagicMock, mock_logger.error).assert_called_once()
+        assert cast(MagicMock, mock_logger.error).call_count == 3

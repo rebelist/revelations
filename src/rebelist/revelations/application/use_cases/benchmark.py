@@ -45,15 +45,22 @@ class BenchmarkUseCase:
 
         retrieval_scores: list[RetrievalScore] = []
         fidelity_scores: list[FidelityScore] = []
+        total_cases = len(benchmark_cases)
 
         try:
             with ThreadPoolExecutor(max_workers=4) as executor:
                 futures = [executor.submit(self._evaluate_case, case, cutoff, limit) for case in benchmark_cases]
-
+                count = 1
                 for future in as_completed(futures):
-                    retrieval_score, fidelity_score = future.result()
-                    retrieval_scores.append(retrieval_score)
-                    fidelity_scores.append(fidelity_score)
+                    try:
+                        retrieval_score, fidelity_score = future.result()
+                        retrieval_scores.append(retrieval_score)
+                        fidelity_scores.append(fidelity_score)
+                        self.__logger.info(f'Benchmark case completed - {count}/{total_cases}')
+                        count += 1
+                    except Exception as error:
+                        self.__logger.error(f'Failed to evaluate case: {error}')
+                        continue
 
             avg_retrieval_score = self._aggregate_retrieval_scores(retrieval_scores)
             avg_fidelity_score = self._aggregate_fidelity_scores(fidelity_scores)
@@ -81,6 +88,9 @@ class BenchmarkUseCase:
 
     def _aggregate_retrieval_scores(self, retrieval_scores: list[RetrievalScore]) -> RetrievalScore:
         retrieval_scores_total = len(retrieval_scores)
+        if not retrieval_scores_total:
+            raise ValueError('No retrieval scores were provided.')
+
         total_mrr = 0.0
         total_ndcg = 0.0
         total_keywords_coverage = 0.0
@@ -103,6 +113,9 @@ class BenchmarkUseCase:
 
     def _aggregate_fidelity_scores(self, fidelity_scores: list[FidelityScore]) -> FidelityScore:
         fidelity_scores_total = len(fidelity_scores)
+        if not fidelity_scores_total:
+            raise ValueError('No fidelity scores were provided.')
+
         total_accuracy = 0.0
         total_completeness = 0.0
         total_relevance = 0.0
