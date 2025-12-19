@@ -18,24 +18,85 @@
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Container-Docker-2496ED?logo=docker&logoColor=white" alt="Docker" /></a>
 </p>
 
-**Revelations** is an offline, open-source Retrieval-Augmented Generation (RAG) app that scans a Confluence space and
-lets you query your internal documentation using natural language.
-Point it to any space, index the pages, and ask questions, instantly get relevant answers using your preferred language
-model (local or remote).
+**Revelations** is an offline, open-source Retrieval-Augmented Generation (RAG) application that transforms your
+Confluence documentation into an intelligent, queryable knowledge base. Simply point it to any Confluence space, index
+the pages, and ask questions in natural language to get instant, contextually relevant answers using your preferred
+language model (local or remote).
 
-## Hybrid Search
+## ✨ Features
 
-Revelations uses **hybrid search** implemented via the Qdrant vector database, which combines two complementary search
-strategies for optimal retrieval:
+- **Hybrid Search**: Combines semantic (dense) and keyword-based (sparse) vector search for optimal retrieval accuracy
+- **RAG Pipeline**: Complete retrieval-augmented generation workflow with document chunking, embedding, and context-aware generation
+- **Cross-Encoder Reranking**: Advanced document reranking using transformer models to improve relevance
+- **Benchmark Suite**: Comprehensive evaluation framework with retrieval and answer quality metrics
+- **Clean Architecture**: Well-structured codebase following domain-driven design principles
+- **Dependency Injection**: Modular design with dependency injection for testability and maintainability
+- **Offline-First**: Works completely offline with local models and databases
+- **Docker Support**: Containerized deployment for easy setup and portability
+- **Type Safety**: Strict type checking with Pyright for robust code quality
 
-- **Dense vector search**: Uses semantic embeddings to find documents that are conceptually similar to your query,
-  even if they don't contain the exact keywords. This enables understanding of meaning and context.
-- **Sparse vector search**: Uses BM25-based keyword matching to find documents containing specific terms from your
-  query. This ensures precise keyword matches are not missed.
+## 🏗️ Architecture
 
-By combining both approaches, hybrid search provides the best of both worlds: semantic understanding for natural
-language queries and precise keyword matching for technical terms and specific concepts. The results are then re-ranked
-using a cross-encoder model to further improve relevance.
+This project follows **Clean Architecture** principles with clear separation of concerns:
+
+- **Domain Layer**: Core business logic, models, and repository interfaces (ports)
+- **Application Layer**: Use cases orchestrating business workflows
+- **Infrastructure Layer**: External adapters (Confluence API, Qdrant, MongoDB, Ollama, etc.)
+- **Handlers Layer**: CLI commands and user interface
+
+The architecture uses the **Ports and Adapters** pattern, making the system highly testable and allowing easy swapping of
+infrastructure components. Dependency injection is handled via `dependency-injector`, enabling clean separation and
+mockability for testing.
+
+## 🔍 Hybrid Search
+
+Revelations implements **hybrid search** via Qdrant, combining two complementary search strategies:
+
+- **Dense Vector Search**: Uses semantic embeddings to find documents conceptually similar to your query, even without
+  exact keyword matches. Enables understanding of meaning and context.
+- **Sparse Vector Search**: Uses BM25-based keyword matching to find documents containing specific terms from your
+  query. Ensures precise keyword matches are not missed.
+
+By combining both approaches, hybrid search provides semantic understanding for natural language queries and precise
+keyword matching for technical terms. Results are further refined using a cross-encoder reranker model to improve
+relevance ranking.
+
+## 🛠️ Tech Stack
+
+### Core Technologies
+- **Python 3.13**: Modern Python with latest features
+- **LangChain**: RAG framework and LLM orchestration
+- **Qdrant**: Vector database with hybrid search support
+- **MongoDB**: Document storage for source materials
+- **Ollama**: Local LLM inference server
+
+### Key Libraries
+- **dependency-injector**: Dependency injection container
+- **sentence-transformers**: Embedding and reranking models
+- **pydantic**: Data validation and settings management
+- **loguru**: Structured logging
+- **pytest**: Testing framework with comprehensive coverage
+
+### Development Tools
+- **Pyright**: Strict type checking
+- **Ruff**: Fast Python linter and formatter
+- **pytest-cov**: Code coverage analysis
+- **pre-commit**: Git hooks for code quality
+
+## 📁 Project Structure
+
+```
+rebelist-revelations/
+├── src/rebelist/revelations/
+│   ├── domain/          # Business logic, models, and ports
+│   ├── application/     # Use cases (business workflows)
+│   ├── infrastructure/  # External adapters (Confluence, Qdrant, MongoDB, etc.)
+│   ├── handlers/        # CLI commands and user interface
+│   └── config/          # Configuration and dependency injection
+├── tests/               # Comprehensive test suite
+├── docker/              # Docker configurations
+└── data/                # Sample datasets and benchmarks
+```
 
 ## ⚠️ Disclaimer
 
@@ -44,47 +105,62 @@ typical personal machine the latency from the language model can be high.
 
 ---
 
-## Development Requirements
+## 🚀 Quick Start
+
+### Prerequisites
 
 * [Python 3.13](https://www.python.org/downloads/)
 * [Docker](https://docs.docker.com/desktop/)
 * [Ollama](https://ollama.com/download)
-* [macOS*](https://www.apple.com/macos/)
+* [macOS*](https://www.apple.com/macos/) - Required for development mode; Docker mode works on any platform
 
-\*Required for development mode; Docker mode works on any platform
+### Installation
 
-## Initialization
+1. Clone the repository and initialize the project:
+   ```bash
+   make init
+   ```
 
-1. Run `make init`
-2. Add the variables `CONFLUENCE_HOST`, `CONFLUENCE_TOKEN` and `CONFLUENCE_SPACE` to the **.env** file if running in
-   development mode, or to the **.env.docker** file if the chat container is being run via Docker.
-3. Run `make start` to run within docker or `make dev` for development.
+2. Configure environment variables:
+   - Add `CONFLUENCE_HOST`, `CONFLUENCE_TOKEN`, and `CONFLUENCE_SPACE` to `.env` (development) or `.env.docker` (Docker)
 
-## Load data from a Confluence space
+3. Start the application:
+   ```bash
+   make start    # Docker mode
+   # or
+   make dev      # Development mode
+   ```
 
-1. Run `bin/console dataset:download` to fetch documents from your Confluence space
-2. After it finishes, run `bin/console dataset:index` to create vector embeddings and index documents for semantic
-   search
-3. All confluence space data is now in the local storage and ready for querying.
+### Usage
 
-## Search
+1. **Download documents from Confluence**:
+   ```bash
+   bin/console dataset:download
+   ```
 
-1. Run `bin/console chat`
-2. Ask a question e.g. _"Who are the members of team A?"_ or _"How session handling works in Project B?"_
-3. Wait ~10 seconds for a response (depending on your computer's resources).
-4. The app returns an answer based on the scanned Confluence documentation.
-5. Type `exit` to quit.
+2. **Index documents for search**:
+   ```bash
+   bin/console dataset:index
+   ```
 
-You can also use the `--evidence` flag to see the source documents used to generate each answer:
+3. **Query your documentation**:
+   ```bash
+   bin/console chat
+   ```
 
-```bash
-bin/console chat --evidence
-```
+   Ask questions like:
+   - _"Who are the members of team A?"_
+   - _"How does session handling work in Project B?"_
 
-## Benchmark
+4. **View source evidence** (optional):
+   ```bash
+   bin/console chat --evidence
+   ```
 
-Evaluate the performance of your RAG setup using a test dataset. The benchmark command measures both retrieval quality
-and answer fidelity.
+## 📊 Benchmarking
+
+Evaluate your RAG system's performance using the built-in benchmark suite. The benchmark measures both retrieval
+quality and answer fidelity across multiple metrics.
 
 ### Usage
 
@@ -95,26 +171,25 @@ bin/console benchmark --dataset <path-to-dataset.jsonl> [--cutoff K] [--limit N]
 ### Options
 
 - `--dataset` (required): Path to a JSONL file containing benchmark test cases with questions and expected answers
-- `--cutoff` (default: 5): The number of top documents (K) to retrieve and use for metric calculation
-- `--limit` (default: 15): Number of documents to retrieve from the database
+- `--cutoff` (default: 5): Number of top documents (K) to retrieve and use for metric calculation
+- `--limit` (default: 15): Total number of documents to retrieve from the database
 
 ### Metrics
 
-The benchmark provides two categories of metrics:
+The benchmark provides comprehensive evaluation across two categories:
 
-**Retrieval Performance Metrics:**
+#### Retrieval Performance Metrics
 
 - **Mean Reciprocal Rank (MRR)**: Measures how well the system ranks relevant documents at the top
-- **Normalized Discounted Cumulative Gain (NDCG)**: Evaluates the quality of ranking considering the position of
-  relevant documents
+- **Normalized Discounted Cumulative Gain (NDCG)**: Evaluates ranking quality considering document position
 - **Keyword Coverage**: Percentage of keywords from expected answers found in retrieved documents
 - **Saturation@K**: Measures how many relevant documents are found within the top K results
 
-**Answer Quality Metrics:**
+#### Answer Quality Metrics
 
-- **Accuracy**: How factually correct the generated answers are
-- **Completeness**: How well the answers cover all aspects of the expected answer
-- **Relevance**: How relevant the answers are to the questions asked
+- **Accuracy**: Factual correctness of generated answers
+- **Completeness**: How well answers cover all aspects of the expected answer
+- **Relevance**: Relevance of answers to the questions asked
 
 ### Example
 
@@ -122,9 +197,22 @@ The benchmark provides two categories of metrics:
 bin/console benchmark --dataset data/benchmark.dataset.jsonl --cutoff 5 --limit 15
 ```
 
-This will run the benchmark on your test dataset and display a comprehensive report showing how well your RAG system
-performs.
+This generates a comprehensive report showing retrieval and generation performance metrics.
 
-## Optional: Shutdown
+## 🛑 Shutdown
 
-Run `make shutdown` to stop the containers and Ollama locally.
+Stop all containers and services:
+
+```bash
+make shutdown
+```
+
+## 🤝 Contributing
+
+This is a learning and experimentation project. Contributions, suggestions, and feedback are welcome! Please ensure
+that:
+
+- Code follows the existing architecture patterns
+- Tests are added for new features
+- Type hints are included for all functions
+- Code passes linting and type checking (`ruff` and `pyright`)
