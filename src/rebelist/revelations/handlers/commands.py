@@ -9,7 +9,7 @@ from prompt_toolkit.formatted_text import HTML
 from pymongo.synchronous.database import Database
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams
-from qdrant_client.models import HnswConfigDiff, OptimizersConfigDiff
+from qdrant_client.models import HnswConfigDiff, OptimizersConfigDiff, SparseIndexParams, SparseVectorParams
 from rich.console import Console
 from rich.live import Live
 from rich.markdown import Markdown
@@ -55,13 +55,24 @@ def dataset_initialize(context: Context, drop: bool) -> None:
             # the minimum number of unindexed vectors a collection segment must accumulate before Qdrant's optimizer
             # will start the HNSW index building process.
             optimizers_config = OptimizersConfigDiff(indexing_threshold=200)
+
             vector_params = VectorParams(
                 size=settings.rag.embedding_dimension,
                 distance=Distance.COSINE,
                 hnsw_config=hnsw_config,
             )
+
+            sparse_params = SparseVectorParams(
+                index=SparseIndexParams(
+                    on_disk=True,
+                )
+            )
+
             qdrant.create_collection(
-                context_document_collection_name, vector_params, optimizers_config=optimizers_config
+                collection_name=context_document_collection_name,
+                vectors_config={settings.qdrant.vector_name: vector_params},
+                sparse_vectors_config={settings.qdrant.sparse_vector_name: sparse_params},
+                optimizers_config=optimizers_config,
             )
 
         mongo_collection = mongo[source_document_collection_name]

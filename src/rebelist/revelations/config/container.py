@@ -9,6 +9,7 @@ from atlassian import Confluence
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
 from dependency_injector.providers import Singleton
 from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_qdrant import FastEmbedSparse, QdrantVectorStore, RetrievalMode
 from langchain_text_splitters import MarkdownTextSplitter, TextSplitter
 from pymongo import MongoClient
 from pymongo.synchronous.database import Database
@@ -81,6 +82,11 @@ class Container(DeclarativeContainer):
         base_url=settings.provided.ollama.uri,
     )
 
+    __sparse_embedding = Singleton(
+        FastEmbedSparse,
+        model_name=settings.provided.qdrant.sparse_embedding,
+    )
+
     __document_splitter = Singleton(_get_text_splitter, settings.provided.rag)
 
     __ranker = Singleton(
@@ -97,6 +103,17 @@ class Container(DeclarativeContainer):
     mongo_client = Singleton(MongoClient, host=settings.provided.mongo.uri, tz_aware=True)
 
     qdrant_client = Singleton(QdrantClient, host=settings.provided.qdrant.host, port=settings.provided.qdrant.port)
+
+    qdrant_vector_store = Singleton(
+        QdrantVectorStore,
+        client=qdrant_client,
+        collection_name=settings.provided.qdrant.context_collection,
+        embedding=__embedding,
+        sparse_embedding=__sparse_embedding,
+        retrieval_mode=RetrievalMode.HYBRID,
+        vector_name=settings.provided.qdrant.vector_name,
+        sparse_vector_name=settings.provided.qdrant.sparse_vector_name,
+    )
 
     ollama_chat = Singleton(
         ChatOllama,
@@ -117,17 +134,9 @@ class Container(DeclarativeContainer):
 
     ollama_answer_evaluator = Singleton(OllamaAnswerEvaluator, ollama_chat, benchmark_prompt_config)
 
-    context_writer = Singleton(
-        QdrantContextWriter,
-        qdrant_client,
-        __embedding,
-        __document_splitter,
-        settings.provided.qdrant.context_collection,
-    )
+    context_writer = Singleton(QdrantContextWriter, qdrant_vector_store, __document_splitter)
 
-    context_reader = Singleton(
-        QdrantContextReader, qdrant_client, __embedding, settings.provided.qdrant.context_collection, __ranker
-    )
+    context_reader = Singleton(QdrantContextReader, qdrant_vector_store, __ranker)
 
     confluence_gateway = Singleton(ConfluenceGateway, __confluence_client, settings.provided.confluence, logger)
 

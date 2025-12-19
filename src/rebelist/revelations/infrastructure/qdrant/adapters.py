@@ -2,10 +2,8 @@ from datetime import datetime
 from typing import Final, Iterable, cast
 
 from langchain_core.documents import Document as InputDocument
-from langchain_ollama import OllamaEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from langchain_text_splitters import TextSplitter
-from qdrant_client import QdrantClient
 from qdrant_client.models import SearchParams
 from sentence_transformers import CrossEncoder
 
@@ -15,14 +13,8 @@ from rebelist.revelations.domain import ContextDocument, ContextReaderPort, Cont
 class QdrantContextWriter(ContextWriterPort):
     """Vector writer adapter."""
 
-    def __init__(
-        self,
-        client: QdrantClient,
-        embedding: OllamaEmbeddings,
-        splitter: TextSplitter,
-        collection: str,
-    ):
-        self.__store = QdrantVectorStore(client=client, collection_name=collection, embedding=embedding)
+    def __init__(self, store: QdrantVectorStore, splitter: TextSplitter):
+        self.__store = store
         self.__splitter = splitter
 
     def add(self, document: Document) -> None:
@@ -46,8 +38,8 @@ class QdrantContextReader(ContextReaderPort):
 
     SEARCH_EFFORT: Final[int] = 200
 
-    def __init__(self, client: QdrantClient, embedding: OllamaEmbeddings, collection: str, ranker: CrossEncoder):
-        self.__store = QdrantVectorStore(client=client, collection_name=collection, embedding=embedding)
+    def __init__(self, store: QdrantVectorStore, ranker: CrossEncoder):
+        self.__store = store
         self.__ranker = ranker
 
     def search(self, query: str, limit: int) -> list[ContextDocument]:

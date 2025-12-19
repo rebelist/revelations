@@ -85,7 +85,10 @@ class QdrantSettings(BaseSettings):
 
     host: str = ''
     port: str = ''
+    vector_name: str = 'dense'
+    sparse_vector_name: str = 'sparse'
     context_collection: str = 'context_documents'
+    sparse_embedding: str = 'Qdrant/bm25'
 
 
 class Settings(BaseSettings):
