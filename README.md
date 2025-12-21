@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-   <a href="https://github.com/rebelist/revelations/releases"><img src="https://img.shields.io/badge/Release-0.10.0-e63946?logo=github&logoColor=white" alt="Release" /></a>
+   <a href="https://github.com/rebelist/revelations/releases"><img src="https://img.shields.io/badge/Release-0.10.1-e63946?logo=github&logoColor=white" alt="Release" /></a>
    <a href="https://www.gnu.org/licenses/gpl-3.0.html"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3" /></a>
    <a href="https://github.com/rebelist/revelations/actions/workflows/tests.yaml"><img src="https://github.com/rebelist/revelations/actions/workflows/tests.yaml/badge.svg" alt="Tests" /></a>
    <a href="https://codecov.io/gh/rebelist/revelations" ><img src="https://codecov.io/gh/rebelist/revelations/graph/badge.svg?token=0FWI5KLNLH" alt="Codecov"/></a>
@@ -26,7 +26,8 @@ language model (local or remote).
 ## ✨ Features
 
 - **Hybrid Search**: Combines semantic (dense) and keyword-based (sparse) vector search for optimal retrieval accuracy
-- **RAG Pipeline**: Complete retrieval-augmented generation workflow with document chunking, embedding, and context-aware generation
+- **RAG Pipeline**: Complete retrieval-augmented generation workflow with document chunking, embedding, and
+  context-aware generation
 - **Cross-Encoder Reranking**: Advanced document reranking using transformer models to improve relevance
 - **Benchmark Suite**: Comprehensive evaluation framework with retrieval and answer quality metrics
 - **Clean Architecture**: Well-structured codebase following domain-driven design principles
@@ -44,7 +45,8 @@ This project follows **Clean Architecture** principles with clear separation of 
 - **Infrastructure Layer**: External adapters (Confluence API, Qdrant, MongoDB, Ollama, etc.)
 - **Handlers Layer**: CLI commands and user interface
 
-The architecture uses the **Ports and Adapters** pattern, making the system highly testable and allowing easy swapping of
+The architecture uses the **Ports and Adapters** pattern, making the system highly testable and allowing easy swapping
+of
 infrastructure components. Dependency injection is handled via `dependency-injector`, enabling clean separation and
 mockability for testing.
 
@@ -64,6 +66,7 @@ relevance ranking.
 ## 🛠️ Tech Stack
 
 ### Core Technologies
+
 - **Python 3.13**: Modern Python with latest features
 - **LangChain**: RAG framework and LLM orchestration
 - **Qdrant**: Vector database with hybrid search support
@@ -71,6 +74,7 @@ relevance ranking.
 - **Ollama**: Local LLM inference server
 
 ### Key Libraries
+
 - **dependency-injector**: Dependency injection container
 - **sentence-transformers**: Embedding and reranking models
 - **pydantic**: Data validation and settings management
@@ -78,6 +82,7 @@ relevance ranking.
 - **pytest**: Testing framework with comprehensive coverage
 
 ### Development Tools
+
 - **Pyright**: Strict type checking
 - **Ruff**: Fast Python linter and formatter
 - **pytest-cov**: Code coverage analysis
@@ -94,8 +99,7 @@ rebelist-revelations/
 │   ├── handlers/        # CLI commands and user interface
 │   └── config/          # Configuration and dependency injection
 ├── tests/               # Comprehensive test suite
-├── docker/              # Docker configurations
-└── data/                # Sample datasets and benchmarks
+└── docker/              # Docker configurations
 ```
 
 ## ⚠️ Disclaimer
@@ -122,7 +126,8 @@ typical personal machine the latency from the language model can be high.
    ```
 
 2. Configure environment variables:
-   - Add `CONFLUENCE_HOST`, `CONFLUENCE_TOKEN`, and `CONFLUENCE_SPACE` to `.env` (development) or `.env.docker` (Docker)
+    - Add `CONFLUENCE_HOST`, `CONFLUENCE_TOKEN`, and `CONFLUENCE_SPACE` to `.env` (development) or `.env.docker` (
+      Docker)
 
 3. Start the application:
    ```bash
@@ -149,8 +154,8 @@ typical personal machine the latency from the language model can be high.
    ```
 
    Ask questions like:
-   - _"Who are the members of team A?"_
-   - _"How does session handling work in Project B?"_
+    - _"Who are the members of team A?"_
+    - _"How does session handling work in Project B?"_
 
 4. **View source evidence** (optional):
    ```bash

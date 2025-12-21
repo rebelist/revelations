@@ -16,5 +16,3 @@ wheels/
 .env
 .env.docker
 .coverage
-
-/IMPROVEMENTS.md

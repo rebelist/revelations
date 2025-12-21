@@ -60,10 +60,18 @@ class BenchmarkCase(BaseModel):
 class RetrievalScore(BaseModel):
     """Captures the retrieval performance metrics for the RAG system."""
 
-    mrr: float = Field(description='Mean Reciprocal Rank - average across all keywords')
-    ndcg: float = Field(description='Normalized Discounted Cumulative Gain (binary relevance)')
-    keyword_coverage: float = Field(description='Percentage of keywords found')
-    saturation_at_k: float = Field(description='How much of the relevant content is captured within the top k results.')
+    mrr: float = Field(
+        description='Mean Reciprocal Rank - keyword-level MRR averaged across all keywords (not query-level MRR)'
+    )
+    ndcg: float = Field(
+        description="""Normalized Discounted Cumulative Gain (binary relevance) - normalized against ideal ordering
+                    within retrieved set"""
+    )
+    keyword_coverage: float = Field(description='Percentage of keywords found at least once in top k documents')
+    saturation_at_k: float = Field(
+        description="""Saturation@k within retrieved set - fraction of relevant documents (within retrieved set) that
+        appear in top k. Relative to retrieved set, not full corpus."""
+    )
 
     model_config = ConfigDict(frozen=True)
 

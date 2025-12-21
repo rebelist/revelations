@@ -1,4 +1,5 @@
 import math
+import re
 from abc import ABC, abstractmethod
 from typing import Any, Final, Iterable
 
@@ -71,6 +72,14 @@ class AnswerEvaluatorPort(ABC):
 class RetrievalEvaluator:
     """Domain service that evaluates retrieval quality at a fixed cutoff k."""
 
+    def _keyword_in_content(self, keyword: str, content: str) -> bool:
+        """Check if keyword appears as a whole word in content.
+
+        Uses word boundary matching to avoid false positives (e.g., 'ai' matching 'said').
+        """
+        pattern = r'\b' + re.escape(keyword.lower()) + r'\b'
+        return bool(re.search(pattern, content.lower()))
+
     def _calculate_mrr(self, keyword: str, documents: list[ContextDocument]) -> float:
         """Compute Reciprocal Rank (RR@k) for a single keyword.
 
@@ -86,11 +95,10 @@ class RetrievalEvaluator:
             - Sensitive to early ranking quality
             - Ignores all relevant documents after the first match
             - Assumes documents are already ranked by the retriever
+            - Uses keyword-level MRR (averaged across keywords), not query-level MRR
         """
-        keyword_lower = keyword.lower()
-
         for rank, document in enumerate(documents, start=1):
-            if keyword_lower in document.content.lower():
+            if self._keyword_in_content(keyword, document.content):
                 return 1.0 / rank
 
         return 0.0
@@ -132,9 +140,7 @@ class RetrievalEvaluator:
             - Normalized against the ideal ordering of the same result set
             - Sensitive to ranking quality across the full top-k list
         """
-        keyword_lower = keyword.lower()
-
-        relevances = [1 if keyword_lower in document.content.lower() else 0 for document in documents]
+        relevances = [1 if self._keyword_in_content(keyword, document.content) else 0 for document in documents]
 
         dcg = self._calculate_dcg(relevances)
 
@@ -149,31 +155,29 @@ class RetrievalEvaluator:
         all_documents: list[ContextDocument],
         top_k_documents: list[ContextDocument],
     ) -> float:
-        """Compute saturation@k for a single keyword.
+        """Compute saturation@k within retrieved set for a single keyword.
 
         Answers:
-            "Of all documents that are relevant for this keyword,
+            "Of all documents that are relevant for this keyword within the retrieved set,
              how many appear within the top k results?"
 
         Interpretation:
-            - 1.0 means all relevant documents are surfaced within top k
+            - 1.0 means all relevant documents (within retrieved set) are surfaced within top k
             - 0.0 means none of the relevant documents appear within top k
 
         Notes:
-            - Compares retrieval saturation, not ranking quality
-            - Sensitive to the choice of k
-            - Assumes `all_documents` represents the full retrieval output
-              (i.e. no cutoff has already been applied)
-            - Returns 0.0 if no relevant documents exist
+            - Compares retrieval saturation within the retrieved set, not the full corpus
+            - Sensitive to both k (cutoff) and the retrieval limit parameter
+            - Assumes `all_documents` represents the full retrieval output (limit documents)
+            - Returns 0.0 if no relevant documents exist in the retrieved set
+            - This metric is relative to the retrieved set, not absolute corpus saturation
         """
-        keyword_lower = keyword.lower()
-
-        total_relevant = sum(1 for doc in all_documents if keyword_lower in doc.content.lower())
+        total_relevant = sum(1 for doc in all_documents if self._keyword_in_content(keyword, doc.content))
 
         if total_relevant == 0:
             return 0.0
 
-        relevant_in_k = sum(1 for doc in top_k_documents if keyword_lower in doc.content.lower())
+        relevant_in_k = sum(1 for doc in top_k_documents if self._keyword_in_content(keyword, doc.content))
 
         return relevant_in_k / total_relevant
 
@@ -186,21 +190,23 @@ class RetrievalEvaluator:
         """Evaluate retrieval performance at cutoff k.
 
         Metrics:
-            - MRR@k:
-                Measures how early the first relevant document appears.
+            - MRR@k (Keyword-Level):
+                Measures how early the first relevant document appears for each keyword,
+                averaged across all keywords. Uses keyword-level MRR (not query-level MRR).
             - nDCG@k:
-                Measures overall ranking quality of relevant documents.
+                Measures overall ranking quality of relevant documents using binary relevance.
+                Normalized against ideal ordering within the retrieved set.
             - Keyword Coverage@k:
-                Percentage of benchmark keywords that appear at least once
-                in the top k documents.
-            - Saturation@k:
-                Measures how much of the total relevant material is surfaced
-                within the top k results.
+                Percentage of benchmark keywords that appear at least once in the top k documents.
+            - Saturation@k (within Retrieved Set):
+                Measures how much of the relevant material (within the retrieved set) is surfaced
+                within the top k results. This is relative to the retrieved set, not the full corpus.
 
         Assumptions:
             - `documents` is a ranked list produced by the retriever
-            - `documents` represents the full retrieval output
-            - Relevance is approximated via keyword presence
+            - `documents` represents the full retrieval output (limit documents)
+            - Relevance is approximated via whole-word keyword matching
+            - Saturation@k is calculated relative to the retrieved set, not the full corpus
         """
         if k <= 0:
             raise ValueError('k must be a positive integer')

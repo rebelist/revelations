@@ -22,8 +22,10 @@ class TestRetrievalEvaluator:
         return [
             ContextDocument(title='Doc 1', content='Python and AI', modified_at=modified_at),
             ContextDocument(title='Doc 2', content='Machine learning basics', modified_at=modified_at),
-            ContextDocument(title='Doc 3', content='Advanced Python topics', modified_at=modified_at),
-            ContextDocument(title='Doc 4', content='Unrelated content', modified_at=modified_at),
+            # Doc 3 is now irrelevant to "python", keeping the relevant doc inside the top-k count at 1
+            ContextDocument(title='Doc 3', content='Unrelated content', modified_at=modified_at),
+            # Doc 4 is outside k=3, but relevant. This forces saturation < 1.0
+            ContextDocument(title='Doc 4', content='Advanced Python topics', modified_at=modified_at),
         ]
 
     @pytest.fixture
@@ -52,16 +54,16 @@ class TestRetrievalEvaluator:
         assert result.mrr == pytest.approx(1.0)
 
         # nDCG should be positive and bounded
-        assert 0.0 < result.ndcg <= 1.0
+        assert result.ndcg == pytest.approx(1.0)
 
         # Both keywords appear in top-k → 100%
         assert result.keyword_coverage == 100.0
 
-        # Saturation:
-        # - python: 2 relevant total, 1 in top-k
-        # - AI: 1 relevant total, 1 in top-k
+        # Saturation@k (within retrieved set):
+        # - python: 2 relevant total in all_documents, 1 in top-k
+        # - AI: 1 relevant total in all_documents, 1 in top-k
         # avg = (1/2 + 1/1) / 2 = 0.75
-        assert result.saturation_at_k == pytest.approx(1.0)
+        assert result.saturation_at_k == pytest.approx(0.75)
 
     def test_evaluate_returns_zero_scores_when_no_keywords_match(
         self,
@@ -120,3 +122,30 @@ class TestRetrievalEvaluator:
         """Tests that a ValueError is raised when k is not a positive integer."""
         with pytest.raises(ValueError, match='k must be a positive integer'):
             evaluator.evaluate(benchmark_case, documents, k=0)
+
+    def test_evaluate_uses_word_boundaries_for_keyword_matching(
+        self,
+        evaluator: RetrievalEvaluator,
+    ) -> None:
+        """Tests that keyword matching uses word boundaries to avoid false positives."""
+        modified_at = datetime(2024, 1, 1, 12, 0, 0)
+        # Documents with words that contain the keyword but shouldn't match
+        documents = [
+            ContextDocument(title='Doc 1', content='This is an application', modified_at=modified_at),
+            ContextDocument(title='Doc 2', content='We need to maintain quality', modified_at=modified_at),
+            ContextDocument(title='Doc 3', content='The AI system works well', modified_at=modified_at),  # Should match
+        ]
+
+        benchmark_case = BenchmarkCase(
+            question='What is AI?',
+            answer='AI is artificial intelligence.',
+            keywords={'ai'},
+        )
+
+        result = evaluator.evaluate(benchmark_case, documents, k=3)
+
+        # "ai" should only match "AI" in Doc 3, not "application" or "maintain"
+        # MRR: first match at rank 3 → 1/3
+        assert result.mrr == pytest.approx(1 / 3)
+        # Keyword coverage: "ai" found → 100%
+        assert result.keyword_coverage == 100.0
