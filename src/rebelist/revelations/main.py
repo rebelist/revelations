@@ -1,6 +1,8 @@
+import logging
 from typing import cast
 
 import rich_click as click
+from huggingface_hub.utils.tqdm import disable_progress_bars
 from rich_click import Command, Context
 
 from rebelist.revelations.config.container import Container
@@ -12,6 +14,17 @@ from rebelist.revelations.handlers.commands import (
     dataset_initialize,
 )
 
+# Disable Logging
+disable_progress_bars()
+logging.getLogger('httpx').setLevel(logging.WARNING)
+logging.getLogger('httpcore').setLevel(logging.WARNING)
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+logging.getLogger('sentence_transformers').setLevel(logging.WARNING)
+logging.getLogger('docling').setLevel(logging.WARNING)
+logging.getLogger('docling_parse').setLevel(logging.WARNING)
+
+
+# Register Commands
 container = Container.create()
 settings = container.settings()
 

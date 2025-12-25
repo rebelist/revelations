@@ -49,7 +49,7 @@ class TestConfluenceGateway:
     def test_fetch_yields_transformed_documents(self, mock_client: MagicMock, document_fixtures: list[dict[str, Any]]):
         """Test fetch documents."""
         mock_logger = MagicMock()
-        settings = ConfluenceSettings(spaces=('DOCS',), min_content_length=50, throttle_delay_seconds=0)
+        settings = ConfluenceSettings(spaces=('DOCS',), throttle_delay_seconds=0)
         gateway = ConfluenceGateway(client=mock_client, settings=settings, logger=mock_logger)
         results = list(gateway.fetch())
 
@@ -73,7 +73,7 @@ class TestConfluenceGateway:
     def test_fetch_with_corrupted_document(self, mock_client: MagicMock):
         """Test fetch documents."""
         mock_logger = MagicMock()
-        settings = ConfluenceSettings(spaces=('DOCS',), min_content_length=50, throttle_delay_seconds=0)
+        settings = ConfluenceSettings(spaces=('DOCS',), throttle_delay_seconds=0)
         gateway = ConfluenceGateway(client=mock_client, settings=settings, logger=mock_logger)
 
         documents = [

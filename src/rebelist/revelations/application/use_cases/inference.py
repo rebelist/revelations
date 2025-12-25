@@ -1,4 +1,4 @@
-from typing import Final, Iterator
+from typing import Iterator
 
 from rebelist.revelations.config.settings import RagSettings
 from rebelist.revelations.domain import ChatAdapterPort, ContextReaderPort, Response
@@ -6,8 +6,6 @@ from rebelist.revelations.domain.services import LoggerPort
 
 
 class InferenceUseCase:
-    CONTEXT_LIMIT: Final[int] = 10
-
     def __init__(
         self,
         context_reader: ContextReaderPort,

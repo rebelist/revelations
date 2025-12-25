@@ -6,6 +6,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from rebelist.revelations.application.use_cases.extraction import DataExtractionUseCase
+from rebelist.revelations.config.settings import RagSettings
 from rebelist.revelations.domain import ContentProviderPort, Document, DocumentRepositoryPort
 from rebelist.revelations.domain.services import LoggerPort, PdfConverterPort
 
@@ -13,7 +14,7 @@ from rebelist.revelations.domain.services import LoggerPort, PdfConverterPort
 class TestDataExtractionUseCase:
     @pytest.fixture
     def document_fixture(self) -> dict[str, Any]:
-        """Create a document fixture."""
+        """Provides a raw document payload returned by the content provider."""
         return {
             'id': 'abc-123',
             'title': 'Mocked Document',
@@ -24,70 +25,103 @@ class TestDataExtractionUseCase:
         }
 
     @pytest.fixture
-    def use_case_and_mocks(self, mocker: MockerFixture, document_fixture: dict[str, Any]) -> dict[str, Any]:
-        """Sets up the use case along with mocked dependencies."""
-        mock_provider: MagicMock = mocker.Mock(spec_set=ContentProviderPort)
-        mock_repository: MagicMock = mocker.Mock(spec_set=DocumentRepositoryPort)
-        pdf_converter: PdfConverterPort | MagicMock = mocker.Mock(spec_set=PdfConverterPort)
-        mock_logger = mocker.create_autospec(LoggerPort)
-        mock_provider.fetch.return_value = [document_fixture]
-        pdf_converter.pdf_to_markdown.return_value = '# This is a title'
+    def content_provider(self, mocker: MockerFixture, document_fixture: dict[str, Any]) -> MagicMock:
+        """Mocks the content provider returning one document."""
+        provider = mocker.create_autospec(ContentProviderPort, instance=True)
+        provider.fetch.return_value = [document_fixture]
+        return provider
 
-        use_case = DataExtractionUseCase(
-            content_provider=mock_provider,
-            repository=mock_repository,
+    @pytest.fixture
+    def repository(self, mocker: MockerFixture) -> MagicMock:
+        """Mocks the document repository."""
+        return mocker.create_autospec(DocumentRepositoryPort, instance=True)
+
+    @pytest.fixture
+    def pdf_converter(self, mocker: MockerFixture) -> MagicMock:
+        """Mocks PDF conversion into Markdown."""
+        converter = mocker.create_autospec(PdfConverterPort, instance=True)
+        converter.pdf_to_markdown.return_value = '# This is a title'
+        return converter
+
+    @pytest.fixture
+    def logger(self, mocker: MockerFixture) -> MagicMock:
+        """Mocks the logger used by the use case."""
+        return mocker.create_autospec(LoggerPort, instance=True)
+
+    @pytest.fixture
+    def settings(self) -> RagSettings:
+        """Provides RAG settings with a minimum content length."""
+        return RagSettings(min_content_length=5)
+
+    @pytest.fixture
+    def use_case(
+        self,
+        content_provider: MagicMock,
+        repository: MagicMock,
+        pdf_converter: MagicMock,
+        settings: RagSettings,
+        logger: MagicMock,
+    ) -> DataExtractionUseCase:
+        """Creates the DataExtractionUseCase with all dependencies wired."""
+        return DataExtractionUseCase(
+            content_provider=content_provider,
+            repository=repository,
             converter=pdf_converter,
-            logger=mock_logger,
+            settings=settings,
+            logger=logger,
         )
 
-        return {
-            'use_case': use_case,
-            'provider': mock_provider,
-            'repository': mock_repository,
-            'logger': mock_logger,
-            'document': document_fixture,
-        }
-
-    def test_document_is_fetched_and_saved(self, use_case_and_mocks: dict[str, Any]) -> None:
-        """Ensures the use case fetches documents, converts them to Documents, and saves them."""
-        use_case = use_case_and_mocks['use_case']
-        mock_repository = use_case_and_mocks['repository']
-        document = use_case_and_mocks['document']
-
-        # Act
+    def test_document_is_fetched_converted_and_saved(
+        self,
+        use_case: DataExtractionUseCase,
+        repository: MagicMock,
+        document_fixture: dict[str, Any],
+    ) -> None:
+        """Ensures fetched documents are converted into domain Documents and persisted."""
         use_case()
 
-        # Assert
-        mock_repository.save.assert_called_once()
-        saved_document: Document = mock_repository.save.call_args[0][0]
+        repository.save.assert_called_once()
+        saved_document: Document = repository.save.call_args[0][0]
 
-        assert saved_document.id == document['id']
-        assert saved_document.title == document['title']
-        assert saved_document.content == document['content']
-        assert saved_document.raw == document['raw']
-        assert saved_document.url == document['url']
+        assert saved_document.id == document_fixture['id']
+        assert saved_document.title == document_fixture['title']
+        assert saved_document.content == document_fixture['content']
+        assert saved_document.raw == document_fixture['raw']
+        assert saved_document.url == document_fixture['url']
         assert isinstance(saved_document.modified_at, datetime)
 
-    def test_error_in_content_provider_is_handled(self, mocker: MockerFixture) -> None:
-        """Ensures that exceptions in content_provider.fetch are caught and re-raised."""
-        mock_provider = mocker.create_autospec(ContentProviderPort)
-        mock_repository = mocker.create_autospec(DocumentRepositoryPort)
-        pdf_converter = mocker.create_autospec(PdfConverterPort)
-        mock_logger = mocker.create_autospec(LoggerPort)
-        mock_provider.fetch.side_effect = Exception('Provider error')
+    def test_exception_in_content_provider_is_propagated(
+        self,
+        mocker: MockerFixture,
+        repository: MagicMock,
+        pdf_converter: MagicMock,
+        settings: RagSettings,
+        logger: MagicMock,
+    ) -> None:
+        """Ensures failures while fetching content are not swallowed."""
+        provider = mocker.create_autospec(ContentProviderPort, instance=True)
+        provider.fetch.side_effect = Exception('Provider error')
+
         use_case = DataExtractionUseCase(
-            content_provider=mock_provider, repository=mock_repository, converter=pdf_converter, logger=mock_logger
+            content_provider=provider,
+            repository=repository,
+            converter=pdf_converter,
+            settings=settings,
+            logger=logger,
         )
+
         with pytest.raises(Exception, match='Provider error'):
             use_case()
 
-    def test_error_in_repository_is_handled(self, use_case_and_mocks: dict[str, Any]) -> None:
-        """Ensures that exceptions in repository.save are caught and re-raised."""
-        use_case = use_case_and_mocks['use_case']
-        mock_repository = use_case_and_mocks['repository']
-        mock_logger = use_case_and_mocks['logger']
-        mock_repository.save.side_effect = Exception('Repository error')
+    def test_exception_while_saving_document_is_logged(
+        self,
+        use_case: DataExtractionUseCase,
+        repository: MagicMock,
+        logger: MagicMock,
+    ) -> None:
+        """Ensures repository failures are logged with document context."""
+        repository.save.side_effect = Exception('Repository error')
 
         use_case()
 
-        mock_logger.error.assert_called_once_with("Failed fetching document. <class 'Exception'> - Repository error")
+        logger.error.assert_called_once_with('Error saving document. [id=abc-123] - Repository error')

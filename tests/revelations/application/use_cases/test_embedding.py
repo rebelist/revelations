@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -13,7 +12,7 @@ from rebelist.revelations.infrastructure.mongo import MongoDocumentRepository
 
 class TestDataEmbeddingUseCase:
     @pytest.fixture
-    def document_fixtures(self) -> list[Document]:
+    def documents(self) -> list[Document]:
         """Create document fixtures."""
         modified_at = datetime(2024, 2, 15, 10, 30, 0)
         return [
@@ -36,54 +35,92 @@ class TestDataEmbeddingUseCase:
         ]
 
     @pytest.fixture
-    def use_case_and_mocks(self, mocker: MockerFixture, document_fixtures: list[Document]) -> dict[str, Any]:
-        """Prepares the use case with mocked repository and context writer."""
-        mock_repository: MagicMock = mocker.Mock(spec_set=MongoDocumentRepository)
-        mock_writer: MagicMock = mocker.Mock(spec_set=ContextWriterPort)
-        mock_logger = mocker.create_autospec(LoggerPort)
-        mock_repository.find_all.return_value = document_fixtures
+    def repository(
+        self,
+        mocker: MockerFixture,
+        documents: list[Document],
+    ) -> MagicMock:
+        """Create repository fixture."""
+        repo: MagicMock = mocker.Mock(spec_set=MongoDocumentRepository)
+        repo.find_all.return_value = documents
+        return repo
 
-        use_case = DataEmbeddingUseCase(repository=mock_repository, context_writer=mock_writer, logger=mock_logger)
+    @pytest.fixture
+    def context_writer(self, mocker: MockerFixture) -> MagicMock:
+        """Create context writer fixture."""
+        return mocker.create_autospec(ContextWriterPort, instance=True)
 
-        return {
-            'use_case': use_case,
-            'repository': mock_repository,
-            'writer': mock_writer,
-            'logging': mock_logger,
-            'documents': document_fixtures,
-        }
+    @pytest.fixture
+    def logger(self, mocker: MockerFixture) -> MagicMock:
+        """Logger fixture."""
+        return mocker.create_autospec(LoggerPort)
 
-    def test_all_documents_are_vectorized(self, use_case_and_mocks: dict[str, Any]) -> None:
+    @pytest.fixture
+    def use_case(
+        self,
+        repository: MagicMock,
+        context_writer: MagicMock,
+        logger: MagicMock,
+    ) -> DataEmbeddingUseCase:
+        """Create usecase fixture."""
+        return DataEmbeddingUseCase(
+            repository=repository,
+            context_writer=context_writer,
+            logger=logger,
+        )
+
+    def test_all_documents_are_vectorized(
+        self,
+        use_case: DataEmbeddingUseCase,
+        context_writer: MagicMock,
+        documents: list[Document],
+    ) -> None:
         """Ensures all retrieved documents are passed to the context writer for vectorization."""
-        use_case = use_case_and_mocks['use_case']
-        mock_writer = use_case_and_mocks['writer']
-        documents = use_case_and_mocks['documents']
-
-        # Act
         use_case()
 
-        # Assert
-        assert mock_writer.add.call_count == len(documents)
-        for doc in documents:
-            mock_writer.add.assert_any_call(doc)
+        assert context_writer.add.call_count == len(documents)
+        for document in documents:
+            context_writer.add.assert_any_call(document)
 
-    def test_error_in_repository_is_handled(self, mocker: MockerFixture, document_fixtures: list[Document]) -> None:
-        """Ensures that exceptions in repository.find_all are caught and re-raised."""
-        mock_repository = mocker.create_autospec(DocumentRepositoryPort, instance=True)
-        mock_writer = mocker.create_autospec(ContextWriterPort, instance=True)
-        mock_logger = mocker.create_autospec(LoggerPort)
-        mock_repository.find_all.side_effect = Exception('Repository error')
-        use_case = DataEmbeddingUseCase(repository=mock_repository, context_writer=mock_writer, logger=mock_logger)
+    def test_error_in_repository_is_raised(
+        self,
+        mocker: MockerFixture,
+        context_writer: MagicMock,
+        logger: MagicMock,
+    ) -> None:
+        """Ensures exceptions in repository.find_all are propagated."""
+        repository = mocker.create_autospec(DocumentRepositoryPort, instance=True)
+        repository.find_all.side_effect = Exception('Repository error')
+
+        use_case = DataEmbeddingUseCase(
+            repository=repository,
+            context_writer=context_writer,
+            logger=logger,
+        )
+
         with pytest.raises(Exception, match='Repository error'):
             use_case()
 
-    def test_error_in_context_writer_is_handled(self, mocker: MockerFixture, document_fixtures: list[Document]) -> None:
-        """Ensures that exceptions in context_writer.add are caught and re-raised."""
-        mock_repository = mocker.create_autospec(DocumentRepositoryPort, instance=True)
-        mock_writer = mocker.create_autospec(ContextWriterPort, instance=True)
-        mock_logger: MagicMock = mocker.create_autospec(LoggerPort)
-        mock_repository.find_all.return_value = document_fixtures
-        mock_writer.add.side_effect = Exception('Writer error')
-        use_case = DataEmbeddingUseCase(repository=mock_repository, context_writer=mock_writer, logger=mock_logger)
+    def test_error_in_context_writer_is_logged(
+        self,
+        mocker: MockerFixture,
+        documents: list[Document],
+    ) -> None:
+        """Ensures exceptions in context_writer.add are logged."""
+        repository = mocker.create_autospec(DocumentRepositoryPort, instance=True)
+        repository.find_all.return_value = documents
+
+        context_writer = mocker.create_autospec(ContextWriterPort, instance=True)
+        context_writer.add.side_effect = Exception('Writer error')
+
+        logger = mocker.create_autospec(LoggerPort)
+
+        use_case = DataEmbeddingUseCase(
+            repository=repository,
+            context_writer=context_writer,
+            logger=logger,
+        )
+
         use_case()
-        mock_logger.error.assert_called_with('Error saving document: Writer error - [id="200" - title="Second Doc"]')
+
+        logger.error.assert_called_with('Error saving document: Writer error - [id="200" - title="Second Doc"]')

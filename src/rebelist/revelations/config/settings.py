@@ -37,6 +37,7 @@ class RagSettings(BaseSettings):
     ranker_model_path: str = ''
     context_cutoff: int = 5
     retrieval_limit: int = 20
+    min_content_length: int = 20
 
 
 class ConfluenceSettings(BaseSettings):
@@ -47,7 +48,6 @@ class ConfluenceSettings(BaseSettings):
     host: str = ''
     token: str = ''
     spaces: Annotated[tuple[str, ...], NoDecode] = ()
-    min_content_length: int = 50
     max_workers: int = 3
     batch_size: int = 500
     throttle_delay_seconds: int = 0
@@ -67,7 +67,7 @@ class MongoSettings(BaseSettings):
     model_config = SettingsConfigDict(frozen=True, env_prefix='MONGO_')
 
     uri: str = ''
-    source_collection: str = 'source_documents'
+    source_collection: str = 'source_documents_x'
 
 
 class OllamaSettings(BaseSettings):

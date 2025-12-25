@@ -1,11 +1,13 @@
 import json
 from pathlib import Path
 
-from rebelist.revelations.domain import BenchmarkCase
-from rebelist.revelations.infrastructure.filesystem import BenchmarkLoader
+import yaml
+
+from rebelist.revelations.domain import BenchmarkCase, PromptConfig
+from rebelist.revelations.infrastructure.filesystem import JsonBenchmarkLoader, YamlPromptLoader
 
 
-class TestBenchmarkLoader:
+class TestJsonBenchmarkLoader:
     """Test suite for the BenchmarkLoader."""
 
     def test_load_yields_benchmark_cases_from_jsonl_file(self, tmp_path: Path) -> None:
@@ -30,7 +32,7 @@ class TestBenchmarkLoader:
                 f.write(json.dumps(case))
                 f.write('\n')
 
-        loader = BenchmarkLoader(dataset)
+        loader = JsonBenchmarkLoader(dataset)
 
         results = list(loader.load())
 
@@ -44,3 +46,37 @@ class TestBenchmarkLoader:
         assert results[1].question == raw_cases[1]['question']
         assert results[1].answer == raw_cases[1]['answer']
         assert results[1].keywords == set(raw_cases[1]['keywords'])
+
+
+class TestYamlPromptLoader:
+    """Test suite for the YamlPromptLoader."""
+
+    def test_load_returns_prompt_config_with_hydrated_namespaces(self, tmp_path: Path) -> None:
+        """Ensures YAML prompt is loaded, hydrated, and converted into PromptConfig."""
+        prompt_file = tmp_path / 'prompts.yaml'
+
+        prompt_yaml = {
+            'qa_prompt': {
+                'system_template': 'You are a helpful assistant for {domain}.',
+                'human_template': 'Answer the following question about {topic}.',
+            }
+        }
+
+        with open(prompt_file, 'w', encoding='utf-8') as f:
+            yaml.safe_dump(prompt_yaml, f)
+
+        namespaces = {
+            'domain': 'software engineering',
+            'topic': 'polymorphism',
+        }
+
+        loader = YamlPromptLoader(
+            path=str(prompt_file),
+            namespaces=namespaces,
+        )
+
+        prompt = loader.load('qa_prompt')
+
+        assert isinstance(prompt, PromptConfig)
+        assert prompt.system_template == 'You are a helpful assistant for software engineering.'
+        assert prompt.human_template == 'Answer the following question about polymorphism.'

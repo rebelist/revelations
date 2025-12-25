@@ -14,7 +14,6 @@ from rebelist.revelations.domain.models import FidelityScore, RetrievalScore
 
 
 class BenchmarkUseCase:
-    CONTEXT_LIMIT: Final[int] = 5
     CUTOFF_MAX: Final[int] = 100
     LIMIT_MAX: Final[int] = 200
 
@@ -76,10 +75,7 @@ class BenchmarkUseCase:
     ) -> tuple[RetrievalScore, FidelityScore]:
         documents = self.__context_reader.search(benchmark_case.question, limit)
 
-        response = self.__chat_adapter.answer(
-            benchmark_case.question,
-            documents[: BenchmarkUseCase.CONTEXT_LIMIT],
-        )
+        response = self.__chat_adapter.answer(benchmark_case.question, documents[:cutoff])
 
         retrieval_score = self.__retrieval_evaluator.evaluate(benchmark_case, documents, cutoff)
         fidelity_score = self.__answer_evaluator.evaluate(benchmark_case, response.answer)

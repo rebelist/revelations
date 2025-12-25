@@ -17,7 +17,7 @@ from rich.table import Table
 
 from rebelist.revelations.domain import BenchmarkScore
 from rebelist.revelations.handlers.console import Number
-from rebelist.revelations.infrastructure.filesystem import BenchmarkLoader
+from rebelist.revelations.infrastructure.filesystem import JsonBenchmarkLoader
 
 
 @click.command(name='dataset:initialize')
@@ -46,10 +46,10 @@ def dataset_initialize(context: Context, drop: bool) -> None:
         if not qdrant.collection_exists(context_document_collection_name):
             hnsw_config = HnswConfigDiff(
                 # m = How many direct connections (or "shortcuts") each point gets on the map.
-                m=16,
+                m=32,
                 # ef_construct = determines how thoroughly Qdrant searches for optimal connections when building the
                 # HNSW index, directly influencing the final index quality and the time it takes to build.
-                ef_construct=200,
+                ef_construct=300,
             )
 
             # the minimum number of unindexed vectors a collection segment must accumulate before Qdrant's optimizer
@@ -105,7 +105,7 @@ def dataset_download(context: Context) -> None:
         spaces = container.settings().confluence.spaces
         console = Console()
 
-        with console.status('[bold yellow]Pulling data from the source...[/bold yellow]', spinner='dots'):
+        with console.status('[bold yellow]Downloading data from the source...[/bold yellow]', spinner='dots'):
             data_extraction_use_case()
 
         click.secho(
@@ -220,7 +220,7 @@ def benchmark(context: Context, dataset: Path, cutoff: int, limit: int) -> None:
     try:
         with console.status('[bold yellow]Running benchmark...[/bold yellow]', spinner='dots'):
             benchmark_use_case = container.benchmark_use_case()
-            loader = BenchmarkLoader(dataset)
+            loader = JsonBenchmarkLoader(dataset)
             benchmark_cases = list(loader.load())
             benchmark_score = cast(BenchmarkScore, benchmark_use_case(benchmark_cases, cutoff, limit))
     except Exception as error:

@@ -33,8 +33,9 @@ class Response[T]:
     documents: Iterable[ContextDocument]
 
 
-@dataclass(frozen=True, slots=True)
-class PromptConfig:
+class PromptConfig(BaseModel):
+    model_config = ConfigDict(frozen=True, str_strip_whitespace=True)
+
     system_template: str
     human_template: str
 

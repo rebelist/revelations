@@ -36,7 +36,7 @@ class QdrantContextWriter(ContextWriterPort):
 class QdrantContextReader(ContextReaderPort):
     """Vector reader adapter."""
 
-    SEARCH_EFFORT: Final[int] = 200
+    SEARCH_EFFORT: Final[int] = 400
 
     def __init__(self, store: QdrantVectorStore, ranker: CrossEncoder):
         self.__store = store
@@ -55,10 +55,8 @@ class QdrantContextReader(ContextReaderPort):
 
             documents.append(ContextDocument(title=title, content=item.page_content, modified_at=modified_at, url=url))
 
-        if len(documents) <= 5:
-            return documents
-
-        documents = self.rerank(query, documents)
+        if len(documents) > 1:
+            documents = self.rerank(query, documents)
 
         return documents
 

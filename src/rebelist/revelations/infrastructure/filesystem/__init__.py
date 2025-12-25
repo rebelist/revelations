@@ -1,3 +1,3 @@
-from rebelist.revelations.infrastructure.filesystem.loaders import BenchmarkLoader
+from rebelist.revelations.infrastructure.filesystem.loaders import JsonBenchmarkLoader, YamlPromptLoader
 
-__all__ = ['BenchmarkLoader']
+__all__ = ['JsonBenchmarkLoader', 'YamlPromptLoader']

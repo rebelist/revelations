@@ -20,8 +20,8 @@ dev:
 	@sleep 2
 	@echo "Pulling Ollama models..."
 	@set -a && . ./.env && set +a && \
-    ollama pull $$RAG_LLM_MODEL && \
-    ollama pull $$RAG_EMBEDDING_MODEL
+    ollama pull $$RAG_LLM_MODEL > /dev/null 2>&1 && \
+    ollama pull $$RAG_EMBEDDING_MODEL > /dev/null 2>&1
 	@revelations dataset:initialize
 
 shutdown:

@@ -7,7 +7,8 @@ from typing import Any, Final, Mapping, cast
 import loguru
 from atlassian import Confluence
 from dependency_injector.containers import DeclarativeContainer, WiringConfiguration
-from dependency_injector.providers import Singleton
+from dependency_injector.providers import Callable, Singleton
+from docling.document_converter import DocumentConverter as DoclingConverter
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_qdrant import FastEmbedSparse, QdrantVectorStore, RetrievalMode
 from langchain_text_splitters import MarkdownTextSplitter, TextSplitter
@@ -20,13 +21,13 @@ from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
 
 from rebelist.revelations.application.use_cases import DataEmbeddingUseCase, DataExtractionUseCase, InferenceUseCase
 from rebelist.revelations.application.use_cases.benchmark import BenchmarkUseCase
-from rebelist.revelations.config.prompts import benchmark_prompt_config, chat_prompt_config
 from rebelist.revelations.config.settings import RagSettings, load_settings
-from rebelist.revelations.domain import RetrievalEvaluator
+from rebelist.revelations.domain import AnswerEvaluatorPort, ChatAdapterPort, RetrievalEvaluator
 from rebelist.revelations.infrastructure.confluence import ConfluenceGateway
+from rebelist.revelations.infrastructure.docling.adapters import PdfConverter
+from rebelist.revelations.infrastructure.filesystem import YamlPromptLoader
 from rebelist.revelations.infrastructure.logging import Logger
 from rebelist.revelations.infrastructure.mongo import MongoDocumentRepository
-from rebelist.revelations.infrastructure.mupdf.adapters import PdfConverter
 from rebelist.revelations.infrastructure.ollama import OllamaMemoryChatAdapter
 from rebelist.revelations.infrastructure.ollama.adapters import OllamaAnswerEvaluator, OllamaStatelessChatAdapter
 from rebelist.revelations.infrastructure.qdrant import QdrantContextReader, QdrantContextWriter
@@ -95,7 +96,19 @@ class Container(DeclarativeContainer):
         local_files_only=True,
     )
 
-    __pdf_converter = Singleton(PdfConverter)
+    __docling_converter = Singleton(DoclingConverter)
+
+    __pdf_converter = Singleton(PdfConverter, __docling_converter)
+
+    __prompt_loader = Singleton(
+        YamlPromptLoader,
+        f'{PROJECT_ROOT}/src/rebelist/revelations/config/prompts.yaml',
+        namespaces={'ChatAdapterPort': ChatAdapterPort, 'AnswerEvaluatorPort': AnswerEvaluatorPort},
+    )
+
+    __chat_prompt = Callable(__prompt_loader().load, key='chat_prompt')
+
+    __benchmark_prompt = Callable(__prompt_loader().load, key='benchmark_prompt')
 
     ### Public Services ###
     logger = Singleton(Logger, loguru.logger)
@@ -126,13 +139,13 @@ class Container(DeclarativeContainer):
         top_p=0.9,  # Nucleus sampling for faster decoding
         repeat_penalty=1.1,  # Reduce repetition
     )
-    ollama_memory_chat_adapter = Singleton(OllamaMemoryChatAdapter, ollama_chat, chat_prompt_config)
+    ollama_memory_chat_adapter = Singleton(OllamaMemoryChatAdapter, ollama_chat, __chat_prompt)
 
-    ollama_stateless_chat_adapter = Singleton(OllamaStatelessChatAdapter, ollama_chat, chat_prompt_config)
+    ollama_stateless_chat_adapter = Singleton(OllamaStatelessChatAdapter, ollama_chat, __chat_prompt)
 
     retrieval_evaluator = Singleton(RetrievalEvaluator)
 
-    ollama_answer_evaluator = Singleton(OllamaAnswerEvaluator, ollama_chat, benchmark_prompt_config)
+    ollama_answer_evaluator = Singleton(OllamaAnswerEvaluator, ollama_chat, __benchmark_prompt)
 
     context_writer = Singleton(QdrantContextWriter, qdrant_vector_store, __document_splitter)
 
@@ -145,7 +158,7 @@ class Container(DeclarativeContainer):
     document_repository = Singleton(MongoDocumentRepository, database, settings.provided.mongo.source_collection)
 
     data_extraction_use_case = Singleton(
-        DataExtractionUseCase, confluence_gateway, document_repository, __pdf_converter, logger
+        DataExtractionUseCase, confluence_gateway, document_repository, __pdf_converter, settings.provided.rag, logger
     )
 
     data_embedding_use_case = Singleton(DataEmbeddingUseCase, document_repository, context_writer, logger)

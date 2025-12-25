@@ -54,13 +54,6 @@ class ConfluenceGateway(ContentProviderPort):
     def __process_page(self, document: dict[str, Any]) -> Union[dict[str, Any], None]:
         """Worker method running in a separate thread."""
         try:
-            body = document.get('body', {}).get('export_view', {})
-            content = body.get('value', '')
-
-            if len(content) < self.__settings.min_content_length:
-                self.__logger.info(f'Skipping short document. [id={document.get("id")}]')
-                return None
-
             time.sleep(self.__settings.throttle_delay_seconds)
             content_bytes = self.__client.get_page_as_pdf(document['id'])
 

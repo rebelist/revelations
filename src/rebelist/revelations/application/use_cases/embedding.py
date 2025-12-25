@@ -1,12 +1,8 @@
-from typing import Final
-
 from rebelist.revelations.domain import ContextWriterPort, DocumentRepositoryPort
 from rebelist.revelations.domain.services import LoggerPort
 
 
 class DataEmbeddingUseCase:
-    CHARACTERS_LENGTH_LIMIT: Final[int] = 500_000
-
     def __init__(self, repository: DocumentRepositoryPort, context_writer: ContextWriterPort, logger: LoggerPort):
         self.__repository = repository
         self.__context_writer = context_writer
@@ -16,10 +12,6 @@ class DataEmbeddingUseCase:
         """Executes the use case."""
         count = 0
         for document in self.__repository.find_all():
-            if len(document.content) > DataEmbeddingUseCase.CHARACTERS_LENGTH_LIMIT:
-                self.__logger.warning(f'Skipping large document. [id="{document.id}" - title="{document.title}"]')
-                continue
-
             try:
                 self.__context_writer.add(document)
                 count += 1
