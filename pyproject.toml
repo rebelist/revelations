@@ -124,7 +124,6 @@ filterwarnings = [
 branch = true
 source = ["src"]
 omit = [
-    "src/rebelist/revelations/config/*.py",
     "*/site-packages/*",
     "*/dependency_injector/*",
     "**/__init__.py",
