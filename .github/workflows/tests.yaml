@@ -72,6 +72,7 @@ jobs:
           uv run pytest --cov=revelations --no-cov-on-fail --cov-report xml
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/test-results-action@v1
+        uses: codecov/codecov-action@v5
         with:
+          report_type: coverage
           token: ${{ secrets.CODECOV_TOKEN }}
