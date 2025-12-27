@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Generator
+from typing import Generator, TypedDict, cast
 
 import yaml
 
@@ -22,6 +22,11 @@ class JsonBenchmarkLoader(BenchmarkLoaderPort):
                 yield BenchmarkCase(**data)
 
 
+class YamlPrompt(TypedDict):
+    system_template: str
+    human_template: str
+
+
 class YamlPromptLoader(PromptLoaderPort):
     """Loads and hydrates prompt configurations from YAML files using constant injection."""
 
@@ -36,11 +41,18 @@ class YamlPromptLoader(PromptLoaderPort):
 
         try:
             hydrated_text = raw_text.format(**self.namespaces)
+
             data = yaml.safe_load(hydrated_text)
+
+            if not isinstance(data, dict):
+                raise ValueError('Prompt file must contain a YAML mapping at root.')
+
         except (KeyError, AttributeError, yaml.YAMLError) as error:
             raise ValueError(f"Failed to load prompt '{key}': {error}") from error
 
         if key not in data:
             raise KeyError(f"Key '{key}' not found in {self.path}")
 
-        return PromptConfig(**data[key])
+        prompt_params = cast(YamlPrompt, data[key])
+
+        return PromptConfig(**prompt_params)

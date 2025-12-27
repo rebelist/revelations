@@ -16,3 +16,4 @@ wheels/
 .env
 .env.docker
 .coverage
+coverage.xml
