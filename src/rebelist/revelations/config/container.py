@@ -133,11 +133,11 @@ class Container(DeclarativeContainer):
         model=settings.provided.rag.llm_model,
         base_url=settings.provided.ollama.uri,
         request_timeout=60.0,
-        temperature=0.2,  # Lower temperature for more consistent responses.
-        num_ctx=4096,  # Limit context window to improve speed (adjust based on model).
-        num_predict=512,  # Limit max tokens to generate for faster responses.
-        top_p=0.9,  # Nucleus sampling for faster decoding.
-        repeat_penalty=1.1,  # Reduce repetition.
+        temperature=0.2,  # Lower temperature for more consistent responses
+        num_ctx=4096,  # Limit context window to improve speed (adjust based on model)
+        num_predict=512,  # Limit max tokens to generate for faster responses
+        top_p=0.9,  # Nucleus sampling for faster decoding
+        repeat_penalty=1.1,  # Reduce repetition
     )
     ollama_memory_chat_adapter = Singleton(OllamaMemoryChatAdapter, ollama_chat, __chat_prompt)
 
