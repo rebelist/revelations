@@ -27,7 +27,7 @@ class RagSettings(BaseSettings):
     model_config = SettingsConfigDict(frozen=True, env_prefix='RAG_')
 
     embedding_model: str = ''
-    embedding_dimension: str = ''
+    embedding_dimension: int = 0
     chunk_size: int = 0
     chunk_overlap: int = 0
     llm_model: str = ''
