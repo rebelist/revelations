@@ -16,8 +16,7 @@ from pymongo import MongoClient
 from pymongo.synchronous.database import Database
 from qdrant_client import QdrantClient
 from sentence_transformers import CrossEncoder
-from transformers import AutoTokenizer
-from transformers.tokenization_utils_fast import PreTrainedTokenizerFast
+from transformers import AutoTokenizer, PreTrainedTokenizerFast
 
 from rebelist.revelations.application.use_cases import DataEmbeddingUseCase, DataExtractionUseCase, InferenceUseCase
 from rebelist.revelations.application.use_cases.benchmark import BenchmarkUseCase
@@ -52,7 +51,10 @@ class Container(DeclarativeContainer):
 
     @staticmethod
     def _get_text_splitter(settings: RagSettings) -> TextSplitter:
-        tokenizer = cast(PreTrainedTokenizerFast, AutoTokenizer.from_pretrained(settings.tokenizer_model_path))
+        tokenizer = cast(
+            PreTrainedTokenizerFast, AutoTokenizer.from_pretrained(settings.tokenizer_model_path, use_fast=True)
+        )
+        assert isinstance(tokenizer, PreTrainedTokenizerFast)
         tokenizer.model_max_length = sys.maxsize
         return MarkdownTextSplitter.from_huggingface_tokenizer(
             tokenizer=tokenizer,
