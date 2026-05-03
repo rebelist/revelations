@@ -1,9 +1,11 @@
 from datetime import datetime
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, create_autospec
 
 import pytest
-from pytest_mock.plugin import MockerFixture
+from pymongo.synchronous.collection import Collection as MongoCollection
+from pymongo.synchronous.cursor import Cursor
+from pymongo.synchronous.database import Database as MongoDatabase
 
 from rebelist.revelations.domain.models import Document
 from rebelist.revelations.infrastructure.mongo.repositories import MongoDocumentRepository
@@ -23,15 +25,15 @@ def document_fixture() -> Document:
 
 
 @pytest.fixture
-def mock_collection(mocker: MockerFixture) -> MagicMock:
+def mock_collection() -> MagicMock:
     """Mocks a MongoDB collection."""
-    return mocker.MagicMock()
+    return create_autospec(MongoCollection, instance=True)
 
 
 @pytest.fixture
-def mock_database(mocker: MockerFixture, mock_collection: MagicMock) -> MagicMock:
+def mock_database(mock_collection: MagicMock) -> MagicMock:
     """Mocks a MongoDB database returning the mocked collection."""
-    db = mocker.MagicMock()
+    db = create_autospec(MongoDatabase, instance=True)
     db.get_collection.return_value = mock_collection
     return db
 
@@ -55,15 +57,13 @@ class TestMongoDocumentRepository:
         mock_database: MagicMock,
         mock_collection: MagicMock,
         document_fixture: Document,
-        mocker: MockerFixture,
     ) -> None:
         """It should yield Document objects retrieved from MongoDB."""
         doc_dict: dict[str, Any] = document_fixture.as_dict()
         mock_cursor = [doc_dict]
 
-        mock_cursor_obj = mocker.MagicMock()
+        mock_cursor_obj = create_autospec(Cursor, instance=True)
         mock_cursor_obj.__iter__.return_value = iter(mock_cursor)
-        mock_cursor_obj.close = mocker.MagicMock()
 
         mock_collection.find.return_value = mock_cursor_obj
 

@@ -1,8 +1,7 @@
-from typing import Any
+from unittest.mock import MagicMock, create_autospec
 
 import pytest
 from docling.document_converter import DocumentConverter as DoclingConverter
-from pytest_mock import MockerFixture
 
 from rebelist.revelations.domain.exceptions import DocumentConverterError
 from rebelist.revelations.infrastructure.docling.adapters import PdfConverter
@@ -14,25 +13,24 @@ class TestPdfConverter:
     @pytest.fixture
     def mock_pdf_data(self) -> bytes:
         """Mock PDF binary content (random bytes)."""
-        # Create 100 random bytes to simulate PDF data
         return b'\x89PDF\x01' + b'A' * 95 + b'EOF'
 
-    def test_pdf_to_markdown_success(self, mocker: MockerFixture, mock_pdf_data: bytes):
+    def test_pdf_to_markdown_success(self, mock_pdf_data: bytes) -> None:
         """Test successful conversion of PDF bytes to Markdown string."""
-        docling = mocker.create_autospec(DoclingConverter, spec_set=True, instance=True)
-        result = mocker.Mock()
+        docling = create_autospec(DoclingConverter, spec_set=True, instance=True)
+        result = MagicMock()
         result.document.export_to_markdown.return_value = '## Sample Markdown'
         docling.convert.return_value = result
 
         converter = PdfConverter(docling)
-        result = converter.pdf_to_markdown(mock_pdf_data)
+        output = converter.pdf_to_markdown(mock_pdf_data)
 
-        assert result == '## Sample Markdown'
+        assert output == '## Sample Markdown'
         docling.convert.assert_called_once()
 
-    def test_pdf_to_markdown_failure(self, mocker: Any, mock_pdf_data: bytes):
+    def test_pdf_to_markdown_failure(self, mock_pdf_data: bytes) -> None:
         """Test that failure in conversion raises DocumentConverterError."""
-        docling = mocker.create_autospec(DoclingConverter, spec_set=True, instance=True)
+        docling = create_autospec(DoclingConverter, spec_set=True, instance=True)
         docling.convert.side_effect = DocumentConverterError('PDF data is corrupted')
         converter = PdfConverter(docling)
 

@@ -1,9 +1,9 @@
 [project]
 name = "rebelist-revelations"
-version = "0.11.2"
+version = "0.12.0"
 description = "An experimental RAG application that scans Confluence for instant answers from your internal documentation."
 readme = "README.md"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.14,<3.15"
 dependencies = [
     "atlassian-python-api>=4.0.7,<5.0.0",
     "dependency-injector>=4.47.1,<5.0.0",
@@ -117,6 +117,7 @@ filterwarnings = [
     "ignore:builtin type SwigPyPacked:DeprecationWarning",
     "ignore:builtin type SwigPyObject:DeprecationWarning",
     "ignore:builtin type swigvarlink:DeprecationWarning",
+    "ignore::DeprecationWarning:langchain_core.*",
 ]
 
 ### coverage ###

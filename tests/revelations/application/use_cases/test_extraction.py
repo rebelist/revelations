@@ -1,9 +1,8 @@
 from datetime import datetime
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, create_autospec
 
 import pytest
-from pytest_mock import MockerFixture
 
 from rebelist.revelations.application.use_cases.extraction import DataExtractionUseCase
 from rebelist.revelations.config.settings import RagSettings
@@ -25,28 +24,28 @@ class TestDataExtractionUseCase:
         }
 
     @pytest.fixture
-    def content_provider(self, mocker: MockerFixture, document_fixture: dict[str, Any]) -> MagicMock:
+    def content_provider(self, document_fixture: dict[str, Any]) -> MagicMock:
         """Mocks the content provider returning one document."""
-        provider = mocker.create_autospec(ContentProviderPort, instance=True)
+        provider = create_autospec(ContentProviderPort, instance=True)
         provider.fetch.return_value = [document_fixture]
         return provider
 
     @pytest.fixture
-    def repository(self, mocker: MockerFixture) -> MagicMock:
+    def repository(self) -> MagicMock:
         """Mocks the document repository."""
-        return mocker.create_autospec(DocumentRepositoryPort, instance=True)
+        return create_autospec(DocumentRepositoryPort, instance=True)
 
     @pytest.fixture
-    def pdf_converter(self, mocker: MockerFixture) -> MagicMock:
+    def pdf_converter(self) -> MagicMock:
         """Mocks PDF conversion into Markdown."""
-        converter = mocker.create_autospec(PdfConverterPort, instance=True)
+        converter = create_autospec(PdfConverterPort, instance=True)
         converter.pdf_to_markdown.return_value = '# This is a title'
         return converter
 
     @pytest.fixture
-    def logger(self, mocker: MockerFixture) -> MagicMock:
+    def logger(self) -> MagicMock:
         """Mocks the logger used by the use case."""
-        return mocker.create_autospec(LoggerPort, instance=True)
+        return create_autospec(LoggerPort, instance=True)
 
     @pytest.fixture
     def settings(self) -> RagSettings:
@@ -92,14 +91,13 @@ class TestDataExtractionUseCase:
 
     def test_exception_in_content_provider_is_propagated(
         self,
-        mocker: MockerFixture,
         repository: MagicMock,
         pdf_converter: MagicMock,
         settings: RagSettings,
         logger: MagicMock,
     ) -> None:
         """Ensures failures while fetching content are not swallowed."""
-        provider = mocker.create_autospec(ContentProviderPort, instance=True)
+        provider = create_autospec(ContentProviderPort, instance=True)
         provider.fetch.side_effect = Exception('Provider error')
 
         use_case = DataExtractionUseCase(
@@ -112,6 +110,28 @@ class TestDataExtractionUseCase:
 
         with pytest.raises(Exception, match='Provider error'):
             use_case()
+
+    def test_short_document_is_skipped_and_logged(
+        self,
+        repository: MagicMock,
+        pdf_converter: MagicMock,
+        content_provider: MagicMock,
+        logger: MagicMock,
+    ) -> None:
+        """Ensures documents whose content is below the minimum length are skipped."""
+        settings = RagSettings(min_content_length=1000)
+        use_case = DataExtractionUseCase(
+            content_provider=content_provider,
+            repository=repository,
+            converter=pdf_converter,
+            settings=settings,
+            logger=logger,
+        )
+
+        use_case()
+
+        repository.save.assert_not_called()
+        logger.info.assert_called_once_with('Skipping short document. [id=abc-123]')
 
     def test_exception_while_saving_document_is_logged(
         self,

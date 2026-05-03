@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from rebelist.revelations.domain.models import ContextDocument, Document
+from rebelist.revelations.domain.models import BenchmarkCase, ContextDocument, Document
 
 
 class TestDocument:
@@ -71,3 +71,15 @@ class TestContextDocument:
         assert document.title == 'Test Context'
         assert document.content == 'Test Content'
         assert document.modified_at == modified_at
+
+
+class TestBenchmarkCase:
+    def test_raises_when_keywords_set_is_empty(self) -> None:
+        """Ensures BenchmarkCase rejects an empty keywords set."""
+        with pytest.raises(ValueError, match='Keywords list cannot be empty'):
+            BenchmarkCase(question='What?', answer='Something.', keywords=set())
+
+    def test_raises_when_any_keyword_is_empty_string(self) -> None:
+        """Ensures BenchmarkCase rejects a keywords set that contains an empty string."""
+        with pytest.raises(ValueError, match='Keywords cannot contain empty strings'):
+            BenchmarkCase(question='What?', answer='Something.', keywords={'valid', ''})

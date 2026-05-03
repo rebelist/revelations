@@ -1,8 +1,7 @@
 from datetime import datetime
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, create_autospec
 
 import pytest
-from pytest_mock import MockerFixture
 
 from rebelist.revelations.application.use_cases.embedding import DataEmbeddingUseCase
 from rebelist.revelations.domain import ContextWriterPort, Document, DocumentRepositoryPort
@@ -35,25 +34,21 @@ class TestDataEmbeddingUseCase:
         ]
 
     @pytest.fixture
-    def repository(
-        self,
-        mocker: MockerFixture,
-        documents: list[Document],
-    ) -> MagicMock:
+    def repository(self, documents: list[Document]) -> MagicMock:
         """Create repository fixture."""
-        repo: MagicMock = mocker.Mock(spec_set=MongoDocumentRepository)
+        repo = create_autospec(MongoDocumentRepository, spec_set=True, instance=True)
         repo.find_all.return_value = documents
         return repo
 
     @pytest.fixture
-    def context_writer(self, mocker: MockerFixture) -> MagicMock:
+    def context_writer(self) -> MagicMock:
         """Create context writer fixture."""
-        return mocker.create_autospec(ContextWriterPort, instance=True)
+        return create_autospec(ContextWriterPort, instance=True)
 
     @pytest.fixture
-    def logger(self, mocker: MockerFixture) -> MagicMock:
+    def logger(self) -> MagicMock:
         """Logger fixture."""
-        return mocker.create_autospec(LoggerPort)
+        return create_autospec(LoggerPort)
 
     @pytest.fixture
     def use_case(
@@ -84,12 +79,11 @@ class TestDataEmbeddingUseCase:
 
     def test_error_in_repository_is_raised(
         self,
-        mocker: MockerFixture,
         context_writer: MagicMock,
         logger: MagicMock,
     ) -> None:
         """Ensures exceptions in repository.find_all are propagated."""
-        repository = mocker.create_autospec(DocumentRepositoryPort, instance=True)
+        repository = create_autospec(DocumentRepositoryPort, instance=True)
         repository.find_all.side_effect = Exception('Repository error')
 
         use_case = DataEmbeddingUseCase(
@@ -103,17 +97,16 @@ class TestDataEmbeddingUseCase:
 
     def test_error_in_context_writer_is_logged(
         self,
-        mocker: MockerFixture,
         documents: list[Document],
     ) -> None:
         """Ensures exceptions in context_writer.add are logged."""
-        repository = mocker.create_autospec(DocumentRepositoryPort, instance=True)
+        repository = create_autospec(DocumentRepositoryPort, instance=True)
         repository.find_all.return_value = documents
 
-        context_writer = mocker.create_autospec(ContextWriterPort, instance=True)
+        context_writer = create_autospec(ContextWriterPort, instance=True)
         context_writer.add.side_effect = Exception('Writer error')
 
-        logger = mocker.create_autospec(LoggerPort)
+        logger = create_autospec(LoggerPort)
 
         use_case = DataEmbeddingUseCase(
             repository=repository,

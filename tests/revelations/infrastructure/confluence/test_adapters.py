@@ -1,12 +1,12 @@
 from datetime import datetime
 from typing import Any
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, create_autospec
 
 import pytest
 from atlassian import Confluence
-from pytest_mock import MockerFixture
 
 from rebelist.revelations.config.settings import ConfluenceSettings
+from rebelist.revelations.domain.services import LoggerPort
 from rebelist.revelations.infrastructure.confluence.adapters import ConfluenceGateway
 
 
@@ -38,9 +38,9 @@ class TestConfluenceGateway:
         ]
 
     @pytest.fixture
-    def mock_client(self, mocker: MockerFixture, document_fixtures: list[dict[str, Any]]) -> MagicMock:
+    def mock_client(self, document_fixtures: list[dict[str, Any]]) -> MagicMock:
         """Mock client."""
-        client = mocker.Mock(spec=Confluence)
+        client = create_autospec(Confluence, instance=True)
         client.get_all_pages_from_space_as_generator.return_value = document_fixtures
         client.get_page_as_pdf.return_value = 'random'.encode('utf-8')
         client.url = 'https://example.com'
@@ -48,7 +48,7 @@ class TestConfluenceGateway:
 
     def test_fetch_yields_transformed_documents(self, mock_client: MagicMock, document_fixtures: list[dict[str, Any]]):
         """Test fetch documents."""
-        mock_logger = MagicMock()
+        mock_logger = create_autospec(LoggerPort, instance=True)
         settings = ConfluenceSettings(spaces=('DOCS',), throttle_delay_seconds=0)
         gateway = ConfluenceGateway(client=mock_client, settings=settings, logger=mock_logger)
         results = list(gateway.fetch())
@@ -72,7 +72,7 @@ class TestConfluenceGateway:
 
     def test_fetch_with_corrupted_document(self, mock_client: MagicMock):
         """Test fetch documents."""
-        mock_logger = MagicMock()
+        mock_logger = create_autospec(LoggerPort, instance=True)
         settings = ConfluenceSettings(spaces=('DOCS',), throttle_delay_seconds=0)
         gateway = ConfluenceGateway(client=mock_client, settings=settings, logger=mock_logger)
 

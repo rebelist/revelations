@@ -1,4 +1,3 @@
-from typing import cast
 from unittest.mock import MagicMock, create_autospec
 
 import pytest
@@ -48,35 +47,35 @@ class TestBenchmarkUseCase:
         )
 
     @pytest.fixture
-    def mock_retrieval_evaluator(self, retrieval_score_fixture: RetrievalScore) -> RetrievalEvaluator:
+    def mock_retrieval_evaluator(self, retrieval_score_fixture: RetrievalScore) -> MagicMock:
         """Provides a mocked retrieval evaluator."""
         mock = create_autospec(RetrievalEvaluator, instance=True)
         mock.evaluate.return_value = retrieval_score_fixture
         return mock
 
     @pytest.fixture
-    def mock_answer_evaluator(self, fidelity_score_fixture: FidelityScore) -> AnswerEvaluatorPort:
+    def mock_answer_evaluator(self, fidelity_score_fixture: FidelityScore) -> MagicMock:
         """Provides a mocked answer evaluator."""
         mock = create_autospec(AnswerEvaluatorPort, instance=True)
         mock.evaluate.return_value = fidelity_score_fixture
         return mock
 
     @pytest.fixture
-    def mock_context_reader(self) -> ContextReaderPort:
+    def mock_context_reader(self) -> MagicMock:
         """Provides a mocked context reader."""
         mock = create_autospec(ContextReaderPort, instance=True)
         mock.search.return_value = ['doc-1', 'doc-2', 'doc-3']
         return mock
 
     @pytest.fixture
-    def mock_chat_adapter(self) -> ChatAdapterPort[str]:
+    def mock_chat_adapter(self) -> MagicMock:
         """Provides a mocked chat adapter."""
         mock = create_autospec(ChatAdapterPort, instance=True)
         mock.answer.return_value.answer = 'Some generated answer'
         return mock
 
     @pytest.fixture
-    def mock_logger(self) -> LoggerPort:
+    def mock_logger(self) -> MagicMock:
         """Provides a mocked logger."""
         return create_autospec(LoggerPort, instance=True)
 
@@ -85,11 +84,11 @@ class TestBenchmarkUseCase:
         benchmark_cases: list[BenchmarkCase],
         retrieval_score_fixture: RetrievalScore,
         fidelity_score_fixture: FidelityScore,
-        mock_retrieval_evaluator: RetrievalEvaluator,
-        mock_answer_evaluator: AnswerEvaluatorPort,
-        mock_context_reader: ContextReaderPort,
-        mock_chat_adapter: ChatAdapterPort[str],
-        mock_logger: LoggerPort,
+        mock_retrieval_evaluator: MagicMock,
+        mock_answer_evaluator: MagicMock,
+        mock_context_reader: MagicMock,
+        mock_chat_adapter: MagicMock,
+        mock_logger: MagicMock,
     ) -> None:
         """Tests that the use case aggregates retrieval and fidelity scores correctly."""
         use_case = BenchmarkUseCase(
@@ -108,19 +107,19 @@ class TestBenchmarkUseCase:
         assert result.fidelity.completeness == fidelity_score_fixture.completeness
         assert result.fidelity.relevance == fidelity_score_fixture.relevance
 
-        assert cast(MagicMock, mock_context_reader.search).call_count == len(benchmark_cases)
-        assert cast(MagicMock, mock_chat_adapter.answer).call_count == len(benchmark_cases)
-        assert cast(MagicMock, mock_retrieval_evaluator.evaluate).call_count == len(benchmark_cases)
-        assert cast(MagicMock, mock_answer_evaluator.evaluate).call_count == len(benchmark_cases)
+        assert mock_context_reader.search.call_count == len(benchmark_cases)
+        assert mock_chat_adapter.answer.call_count == len(benchmark_cases)
+        assert mock_retrieval_evaluator.evaluate.call_count == len(benchmark_cases)
+        assert mock_answer_evaluator.evaluate.call_count == len(benchmark_cases)
 
     def test_call_raises_when_cutoff_exceeds_maximum(
         self,
         benchmark_cases: list[BenchmarkCase],
-        mock_retrieval_evaluator: RetrievalEvaluator,
-        mock_answer_evaluator: AnswerEvaluatorPort,
-        mock_context_reader: ContextReaderPort,
-        mock_chat_adapter: ChatAdapterPort[str],
-        mock_logger: LoggerPort,
+        mock_retrieval_evaluator: MagicMock,
+        mock_answer_evaluator: MagicMock,
+        mock_context_reader: MagicMock,
+        mock_chat_adapter: MagicMock,
+        mock_logger: MagicMock,
     ) -> None:
         """Tests that a ValueError is raised when cutoff exceeds the maximum allowed."""
         use_case = BenchmarkUseCase(
@@ -137,11 +136,11 @@ class TestBenchmarkUseCase:
     def test_call_raises_when_limit_exceeds_maximum(
         self,
         benchmark_cases: list[BenchmarkCase],
-        mock_retrieval_evaluator: RetrievalEvaluator,
-        mock_answer_evaluator: AnswerEvaluatorPort,
-        mock_context_reader: ContextReaderPort,
-        mock_chat_adapter: ChatAdapterPort[str],
-        mock_logger: LoggerPort,
+        mock_retrieval_evaluator: MagicMock,
+        mock_answer_evaluator: MagicMock,
+        mock_context_reader: MagicMock,
+        mock_chat_adapter: MagicMock,
+        mock_logger: MagicMock,
     ) -> None:
         """Tests that a ValueError is raised when limit exceeds the maximum allowed."""
         use_case = BenchmarkUseCase(
@@ -158,11 +157,11 @@ class TestBenchmarkUseCase:
     def test_call_raises_when_cutoff_is_greater_than_limit(
         self,
         benchmark_cases: list[BenchmarkCase],
-        mock_retrieval_evaluator: RetrievalEvaluator,
-        mock_answer_evaluator: AnswerEvaluatorPort,
-        mock_context_reader: ContextReaderPort,
-        mock_chat_adapter: ChatAdapterPort[str],
-        mock_logger: LoggerPort,
+        mock_retrieval_evaluator: MagicMock,
+        mock_answer_evaluator: MagicMock,
+        mock_context_reader: MagicMock,
+        mock_chat_adapter: MagicMock,
+        mock_logger: MagicMock,
     ) -> None:
         """Tests that a ValueError is raised when cutoff is greater than limit."""
         use_case = BenchmarkUseCase(
@@ -176,17 +175,37 @@ class TestBenchmarkUseCase:
         with pytest.raises(ValueError, match='cutoff should not be greater'):
             use_case(benchmark_cases, cutoff=20, limit=10)
 
+    def test_aggregate_fidelity_scores_raises_when_empty(
+        self,
+        mock_retrieval_evaluator: MagicMock,
+        mock_answer_evaluator: MagicMock,
+        mock_context_reader: MagicMock,
+        mock_chat_adapter: MagicMock,
+        mock_logger: MagicMock,
+    ) -> None:
+        """Tests that _aggregate_fidelity_scores raises when called with no scores."""
+        use_case = BenchmarkUseCase(
+            mock_retrieval_evaluator,
+            mock_answer_evaluator,
+            mock_context_reader,
+            mock_chat_adapter,
+            mock_logger,
+        )
+
+        with pytest.raises(ValueError, match='No fidelity scores were provided.'):
+            use_case._aggregate_fidelity_scores([])  # type: ignore[reportPrivateUsage]
+
     def test_call_logs_and_reraises_on_unexpected_exception(
         self,
         benchmark_cases: list[BenchmarkCase],
-        mock_retrieval_evaluator: RetrievalEvaluator,
-        mock_answer_evaluator: AnswerEvaluatorPort,
-        mock_context_reader: ContextReaderPort,
-        mock_chat_adapter: ChatAdapterPort[str],
-        mock_logger: LoggerPort,
+        mock_retrieval_evaluator: MagicMock,
+        mock_answer_evaluator: MagicMock,
+        mock_context_reader: MagicMock,
+        mock_chat_adapter: MagicMock,
+        mock_logger: MagicMock,
     ) -> None:
         """Tests that unexpected errors are logged and re-raised."""
-        cast(MagicMock, mock_context_reader.search).side_effect = RuntimeError('Boom')
+        mock_context_reader.search.side_effect = RuntimeError('Boom')
 
         use_case = BenchmarkUseCase(
             mock_retrieval_evaluator,
@@ -199,4 +218,4 @@ class TestBenchmarkUseCase:
         with pytest.raises(ValueError, match='No retrieval scores were provided.'):
             use_case(benchmark_cases, cutoff=10, limit=20)
 
-        assert cast(MagicMock, mock_logger.error).call_count == 3
+        assert mock_logger.error.call_count == 3

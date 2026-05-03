@@ -1,11 +1,11 @@
 from datetime import datetime
-from typing import Any, Iterable, List, cast
-from unittest.mock import MagicMock, Mock, create_autospec
+from typing import Generator, Iterable
+from unittest.mock import MagicMock, create_autospec, patch
 
 import pytest
 from langchain_core.runnables import Runnable
+from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_ollama import ChatOllama
-from pytest_mock import MockerFixture
 
 from rebelist.revelations.domain import (
     AnswerEvaluatorPort,
@@ -24,9 +24,9 @@ from rebelist.revelations.infrastructure.ollama.adapters import (
 
 
 @pytest.fixture
-def mock_ollama() -> Mock:
+def mock_ollama() -> MagicMock:
     """Create a mocked ChatOllama instance."""
-    return MagicMock(spec=ChatOllama)
+    return create_autospec(ChatOllama, instance=True)
 
 
 @pytest.fixture
@@ -39,7 +39,7 @@ def prompt_config() -> PromptConfig:
 
 
 @pytest.fixture
-def sample_documents() -> List[ContextDocument]:
+def sample_documents() -> list[ContextDocument]:
     """Provides a list of example context documents for testing."""
     return [
         ContextDocument(
@@ -59,16 +59,16 @@ class TestOllamaMemoryChatAdapter:
     """Tests for OllamaMemoryChatAdapter behavior."""
 
     @pytest.fixture
-    def mock_memory_chain(self, mocker: MockerFixture) -> Mock:
+    def mock_memory_chain(self) -> Generator[MagicMock, None, None]:
         """Mock RunnableWithMessageHistory to return a controllable chain instance."""
-        mock_chain_instance = MagicMock()
-        mocker.patch(
+        mock_chain_instance = create_autospec(RunnableWithMessageHistory, instance=True)
+        with patch(
             'rebelist.revelations.infrastructure.ollama.adapters.RunnableWithMessageHistory',
             return_value=mock_chain_instance,
-        )
-        return mock_chain_instance
+        ):
+            yield mock_chain_instance
 
-    def test_respond_initializes_successfully(self, mock_ollama: Mock) -> None:
+    def test_respond_initializes_successfully(self, mock_ollama: MagicMock) -> None:
         """Should initialize without errors."""
         prompt_config = PromptConfig(system_template='First content', human_template='Second content')
         adapter = OllamaMemoryChatAdapter(mock_ollama, prompt_config)
@@ -77,9 +77,9 @@ class TestOllamaMemoryChatAdapter:
 
     def test_respond_with_documents(
         self,
-        mock_ollama: Mock,
-        mock_memory_chain: Mock,
-        sample_documents: List[ContextDocument],
+        mock_ollama: MagicMock,
+        mock_memory_chain: MagicMock,
+        sample_documents: list[ContextDocument],
         prompt_config: PromptConfig,
     ) -> None:
         """Should generate response with context from documents."""
@@ -105,7 +105,7 @@ class TestOllamaMemoryChatAdapter:
         assert call_args[1]['config']['configurable']['session_id'] == 'default'
 
     def test_respond_without_documents(
-        self, mock_ollama: Mock, mock_memory_chain: Mock, prompt_config: PromptConfig
+        self, mock_ollama: MagicMock, mock_memory_chain: MagicMock, prompt_config: PromptConfig
     ) -> None:
         """Should generate response with empty context when no documents provided."""
         question = 'Simple question?'
@@ -123,7 +123,7 @@ class TestOllamaMemoryChatAdapter:
         assert call_args[0][0]['question'] == question
 
     def test_respond_formats_context_correctly(
-        self, mock_ollama: Mock, mock_memory_chain: Mock, prompt_config: PromptConfig
+        self, mock_ollama: MagicMock, mock_memory_chain: MagicMock, prompt_config: PromptConfig
     ) -> None:
         """Should format context with document title and content separated by newlines."""
         documents = [
@@ -153,7 +153,7 @@ class TestOllamaMemoryChatAdapter:
         assert context.count('\n\n') >= 2
 
     def test_respond_preserves_session_id(
-        self, mock_ollama: Mock, mock_memory_chain: Mock, prompt_config: PromptConfig
+        self, mock_ollama: MagicMock, mock_memory_chain: MagicMock, prompt_config: PromptConfig
     ) -> None:
         """Should use consistent session_id across multiple invocations."""
         mock_memory_chain.stream.return_value = 'answer'
@@ -167,7 +167,7 @@ class TestOllamaMemoryChatAdapter:
             assert call_item[1]['config']['configurable']['session_id'] == 'default'
 
     def test_multiple_responses_maintain_history(
-        self, mock_ollama: Mock, mock_memory_chain: Mock, prompt_config: PromptConfig
+        self, mock_ollama: MagicMock, mock_memory_chain: MagicMock, prompt_config: PromptConfig
     ) -> None:
         """Should maintain chat history across multiple response invocations."""
         mock_memory_chain.stream.side_effect = ['answer1', 'answer2', 'answer3']
@@ -199,10 +199,10 @@ class TestOllamaStatelessChatAdapter:
     def adapter(
         self,
         prompt_config: PromptConfig,
-        runnable_chain: Runnable[dict[str, object], str],
+        runnable_chain: MagicMock,
     ) -> OllamaStatelessChatAdapter:
         """Adapter with an injected runnable chain."""
-        ollama = MagicMock()
+        ollama = create_autospec(ChatOllama, instance=True)
 
         adapter = OllamaStatelessChatAdapter(
             ollama=ollama,
@@ -228,8 +228,7 @@ class TestOllamaStatelessChatAdapter:
         assert response.answer == 'generated answer'
         assert response.documents is sample_documents
 
-        chain = runnable_chain  # explicit for type checkers
-        chain.invoke.assert_called_once()
+        runnable_chain.invoke.assert_called_once()
 
     def test_answer_builds_expected_context_and_invokes_chain(
         self,
@@ -251,8 +250,7 @@ class TestOllamaStatelessChatAdapter:
             'Content of document 2'
         )
 
-        chain = runnable_chain
-        chain.invoke.assert_called_once_with(
+        runnable_chain.invoke.assert_called_once_with(
             {
                 ChatAdapterPort.HUMAN_TEMPLATE_INPUT_KEY: question,
                 ChatAdapterPort.HUMAN_TEMPLATE_CONTEXT_KEY: expected_context,
@@ -283,10 +281,10 @@ class TestOllamaAnswerEvaluator:
         )
 
     @pytest.fixture
-    def runnable_chain(self, fidelity_score: FidelityScore) -> Runnable[dict[str, Any], FidelityScore]:
+    def runnable_chain(self, fidelity_score: FidelityScore) -> MagicMock:
         """Provides a mocked runnable chain."""
         chain = create_autospec(Runnable, instance=True)
-        cast(MagicMock, chain).invoke.return_value = fidelity_score
+        chain.invoke.return_value = fidelity_score
         return chain
 
     def test_evaluate_invokes_chain_and_returns_fidelity_score(
@@ -294,22 +292,20 @@ class TestOllamaAnswerEvaluator:
         benchmark_case: BenchmarkCase,
         fidelity_score: FidelityScore,
         prompt_config: PromptConfig,
-        mock_ollama: ChatOllama,
-        runnable_chain: Runnable[dict[str, Any], FidelityScore],
+        mock_ollama: MagicMock,
+        runnable_chain: MagicMock,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Ensures evaluate invokes the chain with correct inputs and returns the FidelityScore."""
         evaluator = OllamaAnswerEvaluator(mock_ollama, prompt_config)
 
-        # Replace the internally constructed chain
         monkeypatch.setattr(evaluator, '_OllamaAnswerEvaluator__chain', runnable_chain)
 
         answer = 'Polymorphism allows different objects to respond to the same message.'
 
         result = evaluator.evaluate(benchmark_case, answer)
 
-        invoke = cast(MagicMock, runnable_chain.invoke)
-        invoke.assert_called_once_with(
+        runnable_chain.invoke.assert_called_once_with(
             {
                 AnswerEvaluatorPort.HUMAN_TEMPLATE_QUESTION_KEY: benchmark_case.question,
                 AnswerEvaluatorPort.HUMAN_TEMPLATE_ANSWER_KEY: answer,
